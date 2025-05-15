@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { MoreVertical, Edit, Trash } from 'react-feather'
 import toast from 'react-hot-toast'
+import { useForm, Controller } from 'react-hook-form'
+
 import {
   Table,
   UncontrolledDropdown,
@@ -12,12 +14,20 @@ import {
   ModalBody,
   ModalFooter,
   Button,
+  Form,
+  FormGroup,
+  Label,
+  Input,
+  FormFeedback,
+  Row,
+  Col,
 } from 'reactstrap'
 
 // ** import service
 import useJwt from '@src/auth/jwt/useJwt'
 
 const TableBasic = ({ editRow }) => {
+  const [allProducts, setAllProducts] = useState([])
   const [products, setProducts] = useState([])
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState(null)
@@ -26,6 +36,7 @@ const TableBasic = ({ editRow }) => {
     const fetchProduct = async () => {
       try {
         const res = await useJwt.getProduct()
+        setAllProducts(res.data)
         setProducts(res.data)
       } catch (err) {
         toast.error('Failed to fetch Product')
@@ -49,6 +60,7 @@ const TableBasic = ({ editRow }) => {
     try {
       await useJwt.deleteProduct(selectedProduct.uid)
       toast.success('Product deleted successfully')
+      setAllProducts((prev) => prev.filter((p) => p.id !== selectedProduct.id))
       setProducts((prev) => prev.filter((p) => p.id !== selectedProduct.id))
     } catch (err) {
       toast.error('Failed to delete product')
@@ -59,8 +71,189 @@ const TableBasic = ({ editRow }) => {
     }
   }
 
+  const {
+    handleSubmit,
+    control,
+    formState: { errors },
+    reset,
+    watch,
+  } = useForm({
+    defaultValues: {
+      vn_name: '',
+      pdn: '',
+      Skuid: '',
+      pcrn: '',
+    },
+  })
+
+  const watchFields = watch()
+
+  useEffect(() => {
+    const filtered = allProducts.filter((item) => {
+      const vnMatch = item.vn_name
+        ?.toLowerCase()
+        .includes(watchFields.vn_name?.toLowerCase() || '')
+      const pdnMatch = item.pdn
+        ?.toLowerCase()
+        .includes(watchFields.pdn?.toLowerCase() || '')
+      const skuidMatch = item.Skuid?.toLowerCase().includes(
+        watchFields.Skuid?.toLowerCase() || ''
+      )
+      const pcrnMatch = item.pcrn
+        ?.toLowerCase()
+        .includes(watchFields.pcrn?.toLowerCase() || '')
+
+      return vnMatch && pdnMatch && skuidMatch && pcrnMatch
+    })
+    setProducts(filtered)
+  }, [watchFields, allProducts])
+
+  const onSubmit = async (data) => {
+    // Not used here but required by useForm
+  }
+
   return (
     <>
+      <Form onSubmit={handleSubmit(onSubmit)}>
+        <Row>
+          <Col sm="12" md="3" className="mb-3">
+            <Label>Vendor Name</Label>
+            <Controller
+              name="vn_name"
+              control={control}
+              rules={{
+                pattern: {
+                  value: /^[A-Za-z\s]+$/,
+                  message: 'Only letters and spaces are allowed',
+                },
+              }}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  type="text"
+                  invalid={!!errors.vn_name}
+                  placeholder="Enter Vendor Name"
+                  onKeyDown={(e) => {
+                    const regex = /^[A-Za-z\s]*$/
+                    if (
+                      !regex.test(e.key) &&
+                      e.key !== 'Backspace' &&
+                      e.key !== 'Tab' &&
+                      e.key !== 'ArrowLeft' &&
+                      e.key !== 'ArrowRight'
+                    ) {
+                      e.preventDefault()
+                    }
+                  }}
+                />
+              )}
+            />
+            <FormFeedback>{errors.vn_name?.message}</FormFeedback>
+          </Col>
+
+          <Col sm="12" md="3" className="mb-3">
+            <Label>Product Name</Label>
+            <Controller
+              name="pdn"
+              control={control}
+              rules={{
+                pattern: {
+                  value: /^[A-Z0-9_]+$/,
+                  message:
+                    'Only uppercase letters, numbers, and underscore (_) are allowed',
+                },
+              }}
+              render={({ field: { onChange, value, ...restField } }) => (
+                <Input
+                  {...restField}
+                  value={value?.toUpperCase().replace(/[^A-Z0-9_]/g, '') || ''}
+                  type="text"
+                  invalid={!!errors.pdn}
+                  placeholder="Search Product Name"
+                  onChange={(e) => {
+                    const cleanedValue = e.target.value
+                      .toUpperCase()
+                      .replace(/[^A-Z0-9_]/g, '')
+                    onChange(cleanedValue)
+                  }}
+                />
+              )}
+            />
+            <FormFeedback>{errors.pdn?.message}</FormFeedback>
+          </Col>
+
+          <Col sm="12" md="3" className="mb-3">
+            <Label>Product SKU :</Label>
+            <Controller
+              name="Skuid"
+              control={control}
+              rules={{
+                pattern: {
+                  value: /^[A-Za-z0-9]+$/,
+                  message: 'Only letters and numbers are allowed',
+                },
+              }}
+              render={({ field: { onChange, value, ...restField } }) => (
+                <Input
+                  {...restField}
+                  value={value?.replace(/[^A-Za-z0-9]/g, '') || ''}
+                  type="text"
+                  invalid={!!errors.Skuid}
+                  placeholder="Enter Skuid"
+                  onChange={(e) => {
+                    const cleanedValue = e.target.value.replace(
+                      /[^A-Za-z0-9]/g,
+                      ''
+                    )
+                    onChange(cleanedValue)
+                  }}
+                />
+              )}
+            />
+            <FormFeedback>{errors.Skuid?.message}</FormFeedback>
+          </Col>
+
+          <Col sm="12" md="3" className="mb-3">
+            <Label>Currency</Label>
+            <Controller
+              name="pcrn"
+              control={control}
+              rules={{
+                pattern: {
+                  value: /^[A-Z]{3}$/,
+                  message: 'Currency must be exactly 3 uppercase letters',
+                },
+                maxLength: {
+                  value: 3,
+                  message: 'Currency code must be 3 letters',
+                },
+                minLength: {
+                  value: 3,
+                  message: 'Currency code must be 3 letters',
+                },
+              }}
+              render={({ field: { onChange, value, ...restField } }) => (
+                <Input
+                  {...restField}
+                  value={value?.toUpperCase().replace(/[^A-Z]/g, '') || ''}
+                  type="text"
+                  maxLength={3}
+                  invalid={!!errors.pcrn}
+                  placeholder="Enter Currency"
+                  onChange={(e) => {
+                    const cleanedValue = e.target.value
+                      .toUpperCase()
+                      .replace(/[^A-Z]/g, '')
+                    onChange(cleanedValue)
+                  }}
+                />
+              )}
+            />
+            <FormFeedback>{errors.pcrn?.message}</FormFeedback>
+          </Col>
+        </Row>
+      </Form>
+
       <Table responsive>
         <thead>
           <tr>
@@ -112,7 +305,7 @@ const TableBasic = ({ editRow }) => {
                     <DropdownItem
                       type="button"
                       className="w-100 d-block"
-                      onClick={() => editRow('open', item)}
+                      onClick={() => editRow('open', item, 'product')}
                     >
                       <Edit className="me-50" size={15} />
                       <span className="align-middle">Edit</span>

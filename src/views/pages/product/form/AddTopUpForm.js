@@ -23,6 +23,7 @@ import {
 import { useForm, Controller } from 'react-hook-form'
 
 const UserForm = ({ formData }) => {
+  console.log('Topup', formData)
   const [currencies, setCurrencies] = useState([])
   const [vendor, setVendor] = useState([])
 

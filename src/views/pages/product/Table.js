@@ -158,6 +158,7 @@ const VendorTable = () => {
           </CardTitle>
         </ModalHeader>
         <ModalBody>
+          {console.log({ formType })}
           {formType === 'skuid' && <AddSkuidForm />}
           {formType === 'product' && <FormSelection formData={editData} />}
         </ModalBody>

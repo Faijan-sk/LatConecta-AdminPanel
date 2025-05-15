@@ -11,7 +11,6 @@ import { Button, Form, Label, Input, FormFeedback, Row, Col } from 'reactstrap'
 import { useForm, Controller } from 'react-hook-form'
 
 const UserForm = ({ formData }) => {
-  console.clear()
   console.log({ formData })
 
   const {
@@ -94,6 +93,6 @@ const UserForm = ({ formData }) => {
       </Row>
     </Form>
   )
-}   
+}
 
 export default UserForm

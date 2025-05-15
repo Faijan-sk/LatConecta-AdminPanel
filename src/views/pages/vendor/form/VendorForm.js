@@ -23,7 +23,7 @@ import {
 import { useForm, Controller } from 'react-hook-form'
 
 const UserForm = ({ formData }) => {
-  console.clear()
+  
   console.log({ formData })
   const [currencies, setCurrencies] = useState([])
 
