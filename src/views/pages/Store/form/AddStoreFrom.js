@@ -29,7 +29,6 @@ import {
 import { useForm, Controller } from 'react-hook-form'
 
 const UserForm = ({ formData }) => {
-  
   console.log({ formData })
   const [currencies, setCurrencies] = useState([])
 
@@ -56,18 +55,18 @@ const UserForm = ({ formData }) => {
     reset,
   } = useForm({
     defaultValues: {
-      username: 'faizasdn_sk',
-      first_name: 'Fadizan',
-      last_name: 'Shaikh',
-      email: 'faizsdasn@gmail.com',
-      password: 'Faizan@123',
-      mobile: '1234569870',
-      cp: 'ABC',
-      dcrn: ['bd18bc05-cf24-4626-83e2-35c417b6baa0'],
-      dwip: '192.168.0.101',
-      sdwip: '10.0.0.25',
-      pwip: '172.16.254.1',
-      spwip: '8.8.8.8',
+      username: '',
+      first_name: '',
+      last_name: '',
+      email: '',
+      password: '',
+      mobile: '',
+      cp: '',
+      dcrn: [''],
+      dwip: '',
+      sdwip: '',
+      pwip: '',
+      spwip: '',
     },
   })
   const colorOptions = [
@@ -113,8 +112,20 @@ const UserForm = ({ formData }) => {
             render={({ field }) => (
               <Input
                 {...field}
+                type="text"
                 invalid={!!errors.username}
                 placeholder="Enter username"
+                onKeyPress={(e) => {
+                  // Allow only letters (a-z, A-Z) and underscore
+                  if (!/[a-zA-Z_]/.test(e.key)) {
+                    e.preventDefault()
+                  }
+                }}
+                onInput={(e) => {
+                  // Remove anything other than letters and underscore
+                  e.target.value = e.target.value.replace(/[^a-zA-Z_]/g, '')
+                  field.onChange(e)
+                }}
               />
             )}
           />
@@ -126,12 +137,28 @@ const UserForm = ({ formData }) => {
           <Controller
             name="first_name"
             control={control}
-            rules={{ required: 'First name is required' }}
+            rules={{
+              required: 'First name is required',
+              pattern: {
+                value: /^[A-Za-z]+$/, // only letters, no spaces, no numbers, no special chars
+                message: 'First name can only contain letters without spaces',
+              },
+            }}
             render={({ field }) => (
               <Input
                 {...field}
                 invalid={!!errors.first_name}
                 placeholder="Enter first name"
+                onChange={(e) => {
+                  // Remove anything that is not A-Z or a-z
+                  const onlyLetters = e.target.value.replace(/[^A-Za-z]/g, '')
+                  field.onChange(onlyLetters)
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === ' ') {
+                    e.preventDefault() // Prevent space key press
+                  }
+                }}
               />
             )}
           />
@@ -143,12 +170,27 @@ const UserForm = ({ formData }) => {
           <Controller
             name="last_name"
             control={control}
-            rules={{ required: 'Last name is required' }}
+            rules={{
+              required: 'Last name is required',
+              pattern: {
+                value: /^[A-Za-z]+$/, // Only letters
+                message: 'Last name can only contain letters without spaces',
+              },
+            }}
             render={({ field }) => (
               <Input
                 {...field}
                 invalid={!!errors.last_name}
                 placeholder="Enter last name"
+                onChange={(e) => {
+                  const onlyLetters = e.target.value.replace(/[^A-Za-z]/g, '')
+                  field.onChange(onlyLetters)
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === ' ') {
+                    e.preventDefault() // Block space key
+                  }
+                }}
               />
             )}
           />
@@ -160,12 +202,18 @@ const UserForm = ({ formData }) => {
           <Controller
             name="email"
             control={control}
+            defaultValue=""
             rules={{
               required: 'Email is required',
               pattern: {
-                value: /^\S+@\S+$/i,
-                message: 'Invalid email address',
+                // Allows only alphanumeric + @ + . (no spaces, no other special characters)
+                value: /^[a-zA-Z0-9@.]+$/,
+                message:
+                  'Only alphanumeric characters, "@" and "." are allowed',
               },
+              validate: (value) =>
+                /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(value) ||
+                'Please enter a valid email address',
             }}
             render={({ field }) => (
               <Input
@@ -173,10 +221,31 @@ const UserForm = ({ formData }) => {
                 type="email"
                 invalid={!!errors.email}
                 placeholder="Enter email"
+                onKeyDown={(e) => {
+                  const allowedKeys = [
+                    ...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@.'.split(
+                      ''
+                    ),
+                    'Backspace',
+                    'Delete',
+                    'ArrowLeft',
+                    'ArrowRight',
+                    'Tab',
+                  ]
+                  if (!allowedKeys.includes(e.key)) {
+                    e.preventDefault()
+                  }
+                }}
+                onPaste={(e) => {
+                  const paste = e.clipboardData.getData('text')
+                  if (!/^[a-zA-Z0-9@.]+$/.test(paste)) {
+                    e.preventDefault()
+                  }
+                }}
               />
             )}
           />
-          <FormFeedback>{errors.email?.message}</FormFeedback>
+          {errors.email && <FormFeedback>{errors.email.message}</FormFeedback>}
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
@@ -208,6 +277,7 @@ const UserForm = ({ formData }) => {
           <Controller
             name="password"
             control={control}
+            defaultValue="B!N@ry1024"
             rules={{
               required: 'Password is required',
               minLength: {
@@ -232,12 +302,24 @@ const UserForm = ({ formData }) => {
           <Controller
             name="cp"
             control={control}
-            rules={{ required: 'Compony name is required' }}
+            rules={{ required: 'Company name is required' }}
             render={({ field }) => (
               <Input
                 {...field}
-                placeholder="Enter Companyy name"
+                type="text"
+                placeholder="Enter Company name"
                 invalid={!!errors.cp}
+                onKeyPress={(e) => {
+                  // Allow letters, numbers, and spaces only
+                  if (!/[a-zA-Z0-9 ]/.test(e.key)) {
+                    e.preventDefault()
+                  }
+                }}
+                onInput={(e) => {
+                  // Remove all special characters except letters, numbers, and spaces
+                  e.target.value = e.target.value.replace(/[^a-zA-Z0-9 ]/g, '')
+                  field.onChange(e)
+                }}
               />
             )}
           />
@@ -264,6 +346,17 @@ const UserForm = ({ formData }) => {
                 type="text"
                 placeholder="Enter Development Whitelist IP"
                 invalid={!!errors.dwip}
+                onKeyPress={(e) => {
+                  // Allow only digits and dots
+                  if (!/[0-9.]/.test(e.key)) {
+                    e.preventDefault()
+                  }
+                }}
+                onInput={(e) => {
+                  // Remove any character other than digits and dots
+                  e.target.value = e.target.value.replace(/[^0-9.]/g, '')
+                  field.onChange(e)
+                }}
               />
             )}
           />
@@ -288,8 +381,19 @@ const UserForm = ({ formData }) => {
               <Input
                 {...field}
                 type="text"
-                invalid={!!errors.pwip}
                 placeholder="Enter Production Whitelist IP"
+                invalid={!!errors.pwip}
+                onKeyPress={(e) => {
+                  // Allow only digits and dots while typing
+                  if (!/[0-9.]/.test(e.key)) {
+                    e.preventDefault()
+                  }
+                }}
+                onInput={(e) => {
+                  // Clean input, allow only digits and dots
+                  e.target.value = e.target.value.replace(/[^0-9.]/g, '')
+                  field.onChange(e)
+                }}
               />
             )}
           />
@@ -314,8 +418,19 @@ const UserForm = ({ formData }) => {
               <Input
                 {...field}
                 type="text"
-                invalid={!!errors.spwip}
                 placeholder="Enter Secondary Production Whitelist IP"
+                invalid={!!errors.spwip}
+                onKeyPress={(e) => {
+                  // Allow only digits and dots
+                  if (!/[0-9.]/.test(e.key)) {
+                    e.preventDefault()
+                  }
+                }}
+                onInput={(e) => {
+                  // Remove invalid chars, allow only digits and dots
+                  e.target.value = e.target.value.replace(/[^0-9.]/g, '')
+                  field.onChange(e)
+                }}
               />
             )}
           />
@@ -339,65 +454,24 @@ const UserForm = ({ formData }) => {
             render={({ field }) => (
               <Input
                 {...field}
-                type="text" // ✅ Allows proper IP entry
-                invalid={!!errors.sdwip}
+                type="text"
                 placeholder="Enter Secondary Development Whitelist IP"
+                invalid={!!errors.sdwip}
+                onKeyPress={(e) => {
+                  if (!/[0-9.]/.test(e.key)) {
+                    e.preventDefault()
+                  }
+                }}
+                onInput={(e) => {
+                  e.target.value = e.target.value.replace(/[^0-9.]/g, '')
+                  field.onChange(e)
+                }}
               />
             )}
           />
           <FormFeedback>{errors.sdwip?.message}</FormFeedback>
         </Col>
 
-        {/* <Col sm="12" md="6" className="mb-2">
-          <Label>Daily Limit </Label>
-          <Controller
-            name=""
-            control={control}
-            rules={{ required: 'Daily Limit is required' }}
-            render={({ field }) => (
-              <Input
-                {...field}
-                invalid={!!errors.username}
-                placeholder="Enter daily limit"
-              />
-            )}
-          />
-          <FormFeedback>{errors.username?.message}</FormFeedback>
-        </Col> */}
-
-        {/* <Col sm="12" md="6" className="mb-2">
-          <Label>Weekly Limit </Label>
-          <Controller
-            name=""
-            control={control}
-            rules={{ required: 'Weekly Limit is required' }}
-            render={({ field }) => (
-              <Input
-                {...field}
-                invalid={!!errors.username}
-                placeholder="Enter Weekly limit"
-              />
-            )}
-          />
-          <FormFeedback>{errors.username?.message}</FormFeedback>
-        </Col> */}
-
-        {/* <Col sm="12" md="12" className="mb-2">
-          <Label>Monthly Limit </Label>
-          <Controller
-            name=""
-            control={control}
-            rules={{ required: 'Monthly Limit is required' }}
-            render={({ field }) => (
-              <Input
-                {...field}
-                invalid={!!errors.username}
-                placeholder="Enter Monthly limit"
-              />
-            )}
-          />
-          <FormFeedback>{errors.username?.message}</FormFeedback>
-        </Col> */}
         <Col className="mb-1" md="6" sm="12">
           <Label className="form-label">Select Currency</Label>
           <Controller

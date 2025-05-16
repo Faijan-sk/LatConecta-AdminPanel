@@ -58,12 +58,23 @@ const UserForm = ({ formData }) => {
             name="name"
             control={control}
             defaultValue="United State Dollar"
-            rules={{ required: 'name is required' }}
+            rules={{ required: 'Name is required' }}
             render={({ field }) => (
               <Input
                 {...field}
                 invalid={!!errors.name}
                 placeholder="Enter name of currency"
+                onKeyPress={(e) => {
+                  // Allow only letters and space
+                  if (!/^[a-zA-Z ]$/.test(e.key)) {
+                    e.preventDefault()
+                  }
+                }}
+                onInput={(e) => {
+                  // Remove any character other than letters and spaces
+                  e.target.value = e.target.value.replace(/[^a-zA-Z ]/g, '')
+                  field.onChange(e)
+                }}
               />
             )}
           />
@@ -82,11 +93,25 @@ const UserForm = ({ formData }) => {
                 {...field}
                 invalid={!!errors.prefix}
                 placeholder="Enter Prefix"
+                onKeyPress={(e) => {
+                  // Only allow letters A-Z or a-z
+                  if (!/^[a-zA-Z]$/.test(e.key)) {
+                    e.preventDefault()
+                  }
+                }}
+                onInput={(e) => {
+                  // Remove non-alphabet characters and convert to uppercase
+                  e.target.value = e.target.value
+                    .replace(/[^a-zA-Z]/g, '')
+                    .toUpperCase()
+                  field.onChange(e)
+                }}
               />
             )}
           />
           <FormFeedback>{errors.prefix?.message}</FormFeedback>
         </Col>
+
         <Button type="submit" color="primary">
           Submit
         </Button>

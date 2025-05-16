@@ -23,7 +23,6 @@ import {
 import { useForm, Controller } from 'react-hook-form'
 
 const UserForm = ({ formData }) => {
-  
   console.log({ formData })
   const [currencies, setCurrencies] = useState([])
 
@@ -97,8 +96,20 @@ const UserForm = ({ formData }) => {
             render={({ field }) => (
               <Input
                 {...field}
+                type="text"
                 invalid={!!errors.username}
                 placeholder="Enter username"
+                onKeyPress={(e) => {
+                  // Allow only letters (a-z, A-Z) and underscore
+                  if (!/[a-zA-Z_]/.test(e.key)) {
+                    e.preventDefault()
+                  }
+                }}
+                onInput={(e) => {
+                  // Remove anything other than letters and underscore
+                  e.target.value = e.target.value.replace(/[^a-zA-Z_]/g, '')
+                  field.onChange(e)
+                }}
               />
             )}
           />
@@ -110,13 +121,28 @@ const UserForm = ({ formData }) => {
           <Controller
             name="first_name"
             control={control}
-            defaultValue="BITEL"
-            rules={{ required: 'First name is required' }}
+            rules={{
+              required: 'First name is required',
+              pattern: {
+                value: /^[A-Za-z]+$/, // only letters, no spaces, no numbers, no special chars
+                message: 'First name can only contain letters without spaces',
+              },
+            }}
             render={({ field }) => (
               <Input
                 {...field}
                 invalid={!!errors.first_name}
                 placeholder="Enter first name"
+                onChange={(e) => {
+                  // Remove anything that is not A-Z or a-z
+                  const onlyLetters = e.target.value.replace(/[^A-Za-z]/g, '')
+                  field.onChange(onlyLetters)
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === ' ') {
+                    e.preventDefault() // Prevent space key press
+                  }
+                }}
               />
             )}
           />
@@ -128,13 +154,27 @@ const UserForm = ({ formData }) => {
           <Controller
             name="last_name"
             control={control}
-            defaultValue="VENDOR"
-            rules={{ required: 'Last name is required' }}
+            rules={{
+              required: 'Last name is required',
+              pattern: {
+                value: /^[A-Za-z]+$/, // Only letters
+                message: 'Last name can only contain letters without spaces',
+              },
+            }}
             render={({ field }) => (
               <Input
                 {...field}
                 invalid={!!errors.last_name}
                 placeholder="Enter last name"
+                onChange={(e) => {
+                  const onlyLetters = e.target.value.replace(/[^A-Za-z]/g, '')
+                  field.onChange(onlyLetters)
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === ' ') {
+                    e.preventDefault() // Block space key
+                  }
+                }}
               />
             )}
           />
@@ -146,13 +186,18 @@ const UserForm = ({ formData }) => {
           <Controller
             name="email"
             control={control}
-            defaultValue="bitel@altan.com"
+            defaultValue=""
             rules={{
               required: 'Email is required',
               pattern: {
-                value: /^\S+@\S+$/i,
-                message: 'Invalid email address',
+                // Allows only alphanumeric + @ + . (no spaces, no other special characters)
+                value: /^[a-zA-Z0-9@.]+$/,
+                message:
+                  'Only alphanumeric characters, "@" and "." are allowed',
               },
+              validate: (value) =>
+                /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(value) ||
+                'Please enter a valid email address',
             }}
             render={({ field }) => (
               <Input
@@ -160,14 +205,34 @@ const UserForm = ({ formData }) => {
                 type="email"
                 invalid={!!errors.email}
                 placeholder="Enter email"
+                onKeyDown={(e) => {
+                  const allowedKeys = [
+                    ...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@.'.split(
+                      ''
+                    ),
+                    'Backspace',
+                    'Delete',
+                    'ArrowLeft',
+                    'ArrowRight',
+                    'Tab',
+                  ]
+                  if (!allowedKeys.includes(e.key)) {
+                    e.preventDefault()
+                  }
+                }}
+                onPaste={(e) => {
+                  const paste = e.clipboardData.getData('text')
+                  if (!/^[a-zA-Z0-9@.]+$/.test(paste)) {
+                    e.preventDefault()
+                  }
+                }}
               />
             )}
           />
-          <FormFeedback>{errors.email?.message}</FormFeedback>
+          {errors.email && <FormFeedback>{errors.email.message}</FormFeedback>}
         </Col>
 
-        {/* {!watch('uid') ? ( */}
-        {/* <Col sm="12" md="6" className="mb-2">
+        <Col sm="12" md="6" className="mb-2">
           <Label>Password</Label>
           <Controller
             name="password"
@@ -190,8 +255,7 @@ const UserForm = ({ formData }) => {
             )}
           />
           <FormFeedback>{errors.password?.message}</FormFeedback>
-        </Col> */}
-        {/* ) : null} */}
+        </Col>
 
         <Col sm="12" md="6" className="mb-2">
           <Label>Country Code</Label>
@@ -199,12 +263,40 @@ const UserForm = ({ formData }) => {
             name="country_code"
             control={control}
             defaultValue="+52"
-            rules={{ required: 'Country code is required' }}
+            rules={{
+              required: 'Country code is required',
+              pattern: {
+                value: /^\+\d+$/,
+                message:
+                  'Country code must start with + followed by numbers only',
+              },
+            }}
             render={({ field }) => (
               <Input
                 {...field}
                 placeholder="+XX"
                 invalid={!!errors.country_code}
+                onKeyDown={(e) => {
+                  const allowedKeys = [
+                    'Backspace',
+                    'Delete',
+                    'ArrowLeft',
+                    'ArrowRight',
+                    'Tab',
+                  ]
+                  // Allow numbers and '+' only
+                  const isNumber = /^[0-9]$/.test(e.key)
+                  const isPlus = e.key === '+'
+                  if (!isNumber && !isPlus && !allowedKeys.includes(e.key)) {
+                    e.preventDefault()
+                  }
+                }}
+                onPaste={(e) => {
+                  const paste = e.clipboardData.getData('text')
+                  if (!/^\+?\d+$/.test(paste)) {
+                    e.preventDefault()
+                  }
+                }}
               />
             )}
           />
@@ -229,6 +321,15 @@ const UserForm = ({ formData }) => {
                 {...field}
                 placeholder="Enter mobile number"
                 invalid={!!errors.mobile}
+                onKeyPress={(e) => {
+                  if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault()
+                  }
+                }}
+                onInput={(e) => {
+                  e.target.value = e.target.value.replace(/[^0-9]/g, '')
+                  field.onChange(e)
+                }}
               />
             )}
           />

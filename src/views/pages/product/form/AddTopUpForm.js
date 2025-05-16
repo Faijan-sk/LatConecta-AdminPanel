@@ -68,9 +68,9 @@ const UserForm = ({ formData }) => {
       crn: '',
       pcrn: '',
       bundle_fee: 0,
-      pt: 1,
+      pt: 2,
       gb: 0,
-      dp: 0,
+      dp: '',
       nos: 0,
       ic: 0,
       oc: 0,
@@ -81,8 +81,8 @@ const UserForm = ({ formData }) => {
 
       vn_name: '',
       uid: '',
-      max_range: 0,
-      min_range: 0,
+      max_range: '',
+      min_range: '',
       product: null,
       product_category: '',
     },
@@ -219,9 +219,20 @@ const UserForm = ({ formData }) => {
             render={({ field }) => (
               <Input
                 {...field}
+                type="text" // text for better input control
                 invalid={!!errors.min_range}
                 placeholder="Enter min Range"
-                type="number"
+                onKeyPress={(e) => {
+                  // Allow only digits
+                  if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault()
+                  }
+                }}
+                onInput={(e) => {
+                  // Remove all non-digit characters
+                  e.target.value = e.target.value.replace(/[^0-9]/g, '')
+                  field.onChange(e)
+                }}
               />
             )}
           />
@@ -238,9 +249,20 @@ const UserForm = ({ formData }) => {
             render={({ field }) => (
               <Input
                 {...field}
+                type="text" // use text for full control
                 invalid={!!errors.max_range}
                 placeholder="Enter Max Range"
-                type="number"
+                onKeyPress={(e) => {
+                  // Allow only digits 0-9
+                  if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault()
+                  }
+                }}
+                onInput={(e) => {
+                  // Remove all non-digit characters
+                  e.target.value = e.target.value.replace(/[^0-9]/g, '')
+                  field.onChange(e)
+                }}
               />
             )}
           />
@@ -253,20 +275,31 @@ const UserForm = ({ formData }) => {
             name="pdn"
             control={control}
             defaultValue={0}
-            rules={{ required: 'product denomination name is required' }}
+            rules={{ required: 'Product denomination name is required' }}
             render={({ field }) => (
               <Input
                 {...field}
                 type="text"
                 invalid={!!errors.pdn}
                 placeholder="Product Denomination Name"
+                onKeyPress={(e) => {
+                  // Allow only letters, numbers and underscore
+                  if (!/[a-zA-Z0-9_]/.test(e.key)) {
+                    e.preventDefault()
+                  }
+                }}
+                onInput={(e) => {
+                  // Remove all except letters, numbers and underscore
+                  e.target.value = e.target.value.replace(/[^a-zA-Z0-9_]/g, '')
+                  field.onChange(e)
+                }}
               />
             )}
           />
           <FormFeedback>{errors.pdn?.message}</FormFeedback>
         </Col>
 
-        <Col sm="12" md="12" className="mb-2">
+        <Col sm="12" md="6" className="mb-2">
           <Label>Alias Name</Label>
           <Controller
             name="alias_name"
@@ -279,6 +312,17 @@ const UserForm = ({ formData }) => {
                 type="text"
                 invalid={!!errors.alias_name}
                 placeholder="Alias Name"
+                onKeyPress={(e) => {
+                  // Allow only letters, numbers and underscore
+                  if (!/[a-zA-Z0-9_]/.test(e.key)) {
+                    e.preventDefault()
+                  }
+                }}
+                onInput={(e) => {
+                  // Remove all except letters, numbers and underscore
+                  e.target.value = e.target.value.replace(/[^a-zA-Z0-9_]/g, '')
+                  field.onChange(e)
+                }}
               />
             )}
           />

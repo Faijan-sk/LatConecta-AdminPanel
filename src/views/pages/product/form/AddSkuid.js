@@ -54,7 +54,7 @@ const UserForm = ({ formData }) => {
   } = useForm({
     defaultValues: {
       skuId: '',
-      price: 0,
+      price: '',
       currency: '',
     },
   })
@@ -120,8 +120,31 @@ const UserForm = ({ formData }) => {
             render={({ field }) => (
               <Input
                 {...field}
+                type="text" // Use text to control input fully
                 invalid={!!errors.price}
                 placeholder="Enter amount"
+                onKeyPress={(e) => {
+                  // Allow only digits and one dot
+                  if (!/[0-9.]/.test(e.key)) {
+                    e.preventDefault()
+                  }
+                  // Prevent more than one dot
+                  if (e.key === '.' && e.currentTarget.value.includes('.')) {
+                    e.preventDefault()
+                  }
+                }}
+                onInput={(e) => {
+                  let val = e.target.value
+                  // Remove invalid characters except digits and dot
+                  val = val.replace(/[^0-9.]/g, '')
+                  const parts = val.split('.')
+                  // Allow only one dot
+                  if (parts.length > 2) {
+                    val = parts.shift() + '.' + parts.join('')
+                  }
+                  e.target.value = val
+                  field.onChange(e)
+                }}
               />
             )}
           />
@@ -129,20 +152,33 @@ const UserForm = ({ formData }) => {
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
-          <Label>Sku ID</Label>
+          <Label>Skuid</Label>
           <Controller
-            name="skuId"
+            name="Skuid"
             control={control}
-            rules={{ required: 'Sku Id is required' }}
+            defaultValue={14}
+            rules={{ required: 'Skuid is required' }}
             render={({ field }) => (
               <Input
                 {...field}
-                invalid={!!errors.skuId}
+                type="text"
+                invalid={!!errors.Skuid}
                 placeholder="Enter Skuid"
+                onKeyPress={(e) => {
+                  // Allow only alphabets and numbers
+                  if (!/[a-zA-Z0-9]/.test(e.key)) {
+                    e.preventDefault()
+                  }
+                }}
+                onInput={(e) => {
+                  // Remove any character that is not a letter or digit
+                  e.target.value = e.target.value.replace(/[^a-zA-Z0-9]/g, '')
+                  field.onChange(e)
+                }}
               />
             )}
           />
-          <FormFeedback>{errors.skuId?.message}</FormFeedback>
+          <FormFeedback>{errors.Skuid?.message}</FormFeedback>
         </Col>
 
         <Button type="submit" color="primary">

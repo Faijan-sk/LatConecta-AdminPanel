@@ -50,18 +50,6 @@ const UserForm = ({ formData }) => {
         console.error(err)
       }
     }
-
-    // const fetchSkuid = async () => {
-    //   try {
-    //     const res = await useJwt.getSkuid()
-    //     setSkuid(res.data)
-    //   } catch (err) {
-    //     toast.error('Failed to fetch Skuid')
-    //     console.error(err)
-    //   }
-    // }
-
-    // fetchSkuid()
     fetchCurrencies()
     fetchVendors()
   }, [])
@@ -75,24 +63,24 @@ const UserForm = ({ formData }) => {
   } = useForm({
     defaultValues: {
       vn: '',
-      amt: 0,
+      amt: '',
       crn: '',
       pcrn: '',
-      bundle_fee: 0,
+      bundle_fee: '',
       pt: 1,
-      gb: 0,
-      dp: 0,
-      nos: 0,
-      ic: 0,
-      oc: 0,
+      gb: '',
+      dp: '0',
+      nos: '',
+      ic: '',
+      oc: '',
       eso: '',
-      Skuid: 'EV1_MS_50_MXN',
-      pdn: 'THE_NEIGHBOUR_50_MXN',
-      alias_name: 'THE_NEIGHBOUR_50_MXN',
+      Skuid: '',
+      pdn: '',
+      alias_name: '',
       vn_name: '',
       uid: '',
-      max_range: 0,
-      min_range: 0,
+      max_range: '0',
+      min_range: '0',
       product: null,
       product_category: '',
     },
@@ -226,18 +214,41 @@ const UserForm = ({ formData }) => {
         />
 
         <Col sm="12" md="6" className="mb-2">
-          <Label>Ammount</Label>
+          <Label>Amount</Label>
           <Controller
             name="amt"
             control={control}
             defaultValue=""
-            rules={{ required: 'Ammount is required' }}
+            rules={{ required: 'Amount is required' }}
             render={({ field }) => (
               <Input
                 {...field}
                 invalid={!!errors.amt}
-                placeholder="Enter Ammount"
-                type="number"
+                placeholder="Enter Amount"
+                type="text" // Use text to fully control input
+                onKeyPress={(e) => {
+                  // Allow only digits and one dot
+                  if (!/[0-9.]/.test(e.key)) {
+                    e.preventDefault()
+                  }
+                  // Prevent more than one dot
+                  if (e.key === '.' && e.currentTarget.value.includes('.')) {
+                    e.preventDefault()
+                  }
+                }}
+                onInput={(e) => {
+                  // Remove all but digits and dot; allow only one dot
+                  let val = e.target.value
+                  // Remove invalid characters
+                  val = val.replace(/[^0-9.]/g, '')
+                  // Remove all dots except first one
+                  const parts = val.split('.')
+                  if (parts.length > 2) {
+                    val = parts.shift() + '.' + parts.join('')
+                  }
+                  e.target.value = val
+                  field.onChange(e)
+                }}
               />
             )}
           />
@@ -256,7 +267,28 @@ const UserForm = ({ formData }) => {
                 {...field}
                 invalid={!!errors.bundle_fee}
                 placeholder="Enter bundle fee"
-                type="number"
+                type="text" // Use text to control input fully
+                onKeyPress={(e) => {
+                  // Allow only digits and one dot
+                  if (!/[0-9.]/.test(e.key)) {
+                    e.preventDefault()
+                  }
+                  // Prevent more than one dot
+                  if (e.key === '.' && e.currentTarget.value.includes('.')) {
+                    e.preventDefault()
+                  }
+                }}
+                onInput={(e) => {
+                  // Remove invalid characters except digits and dot
+                  let val = e.target.value
+                  val = val.replace(/[^0-9.]/g, '')
+                  const parts = val.split('.')
+                  if (parts.length > 2) {
+                    val = parts.shift() + '.' + parts.join('')
+                  }
+                  e.target.value = val
+                  field.onChange(e)
+                }}
               />
             )}
           />
@@ -273,9 +305,30 @@ const UserForm = ({ formData }) => {
             render={({ field }) => (
               <Input
                 {...field}
-                type="number"
+                type="text" // Use text for full control
                 invalid={!!errors.gb}
                 placeholder="Enter data"
+                onKeyPress={(e) => {
+                  // Allow only digits and one dot
+                  if (!/[0-9.]/.test(e.key)) {
+                    e.preventDefault()
+                  }
+                  // Prevent more than one dot
+                  if (e.key === '.' && e.currentTarget.value.includes('.')) {
+                    e.preventDefault()
+                  }
+                }}
+                onInput={(e) => {
+                  // Remove invalid chars, allow only one dot
+                  let val = e.target.value
+                  val = val.replace(/[^0-9.]/g, '')
+                  const parts = val.split('.')
+                  if (parts.length > 2) {
+                    val = parts.shift() + '.' + parts.join('')
+                  }
+                  e.target.value = val
+                  field.onChange(e)
+                }}
               />
             )}
           />
@@ -292,9 +345,20 @@ const UserForm = ({ formData }) => {
             render={({ field }) => (
               <Input
                 {...field}
-                type="number"
+                type="text" // Use text for full control
                 invalid={!!errors.nos}
                 placeholder="Enter Number of SMS"
+                onKeyPress={(e) => {
+                  // Allow only digits 0-9
+                  if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault()
+                  }
+                }}
+                onInput={(e) => {
+                  // Remove any non-digit character
+                  e.target.value = e.target.value.replace(/[^0-9]/g, '')
+                  field.onChange(e)
+                }}
               />
             )}
           />
@@ -349,51 +413,55 @@ const UserForm = ({ formData }) => {
             render={({ field }) => (
               <Input
                 {...field}
-                type="text"
+                type="text" // use text for full input control
                 invalid={!!errors.eso}
                 placeholder="Enter special offer"
+                onKeyPress={(e) => {
+                  // Allow only digits
+                  if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault()
+                  }
+                }}
+                onInput={(e) => {
+                  // Remove non-digit characters
+                  e.target.value = e.target.value.replace(/[^0-9]/g, '')
+                  field.onChange(e)
+                }}
               />
             )}
           />
           <FormFeedback>{errors.eso?.message}</FormFeedback>
         </Col>
+
         <Col sm="12" md="6" className="mb-2">
           <Label>Skuid</Label>
           <Controller
             name="Skuid"
             control={control}
             defaultValue={14}
-            rules={{ required: 'Special offer is required' }}
+            rules={{ required: 'Skuid is required' }}
             render={({ field }) => (
               <Input
                 {...field}
                 type="text"
                 invalid={!!errors.Skuid}
                 placeholder="Enter Skuid"
+                onKeyPress={(e) => {
+                  // Allow only alphabets and numbers
+                  if (!/[a-zA-Z0-9]/.test(e.key)) {
+                    e.preventDefault()
+                  }
+                }}
+                onInput={(e) => {
+                  // Remove any character that is not a letter or digit
+                  e.target.value = e.target.value.replace(/[^a-zA-Z0-9]/g, '')
+                  field.onChange(e)
+                }}
               />
             )}
           />
           <FormFeedback>{errors.Skuid?.message}</FormFeedback>
         </Col>
-        {/* <Col sm="12" md="6" className="mb-2">
-          <Label>Select Skuid</Label>
-          <Controller
-            name="Skuid"
-            control={control}
-            rules={{ required: 'Skuid is required' }}
-            render={({ field }) => (
-              <Input type="select" {...field} invalid={!!errors.Skuid}>
-                <option value="">Select Skuid</option>
-                {skuid.map((item) => (
-                  <option key={item.uid} value={item.skuId}>
-                    {item.skuId}
-                  </option>
-                ))}
-              </Input>
-            )}
-          />
-          <FormFeedback>{errors.Skuid?.message}</FormFeedback>
-        </Col> */}
 
         <Col sm="12" md="6" className="mb-2">
           <Label>Product Denomination Name</Label>
@@ -408,6 +476,17 @@ const UserForm = ({ formData }) => {
                 type="text"
                 invalid={!!errors.pdn}
                 placeholder="Product Denomination Name"
+                onKeyPress={(e) => {
+                  // Allow only letters, numbers and underscore
+                  if (!/[a-zA-Z0-9_]/.test(e.key)) {
+                    e.preventDefault()
+                  }
+                }}
+                onInput={(e) => {
+                  // Remove all except letters, numbers and underscore
+                  e.target.value = e.target.value.replace(/[^a-zA-Z0-9_]/g, '')
+                  field.onChange(e)
+                }}
               />
             )}
           />
@@ -427,6 +506,17 @@ const UserForm = ({ formData }) => {
                 type="text"
                 invalid={!!errors.alias_name}
                 placeholder="Alias Name"
+                onKeyPress={(e) => {
+                  // Allow only letters, numbers and underscore
+                  if (!/[a-zA-Z0-9_]/.test(e.key)) {
+                    e.preventDefault()
+                  }
+                }}
+                onInput={(e) => {
+                  // Remove all except letters, numbers and underscore
+                  e.target.value = e.target.value.replace(/[^a-zA-Z0-9_]/g, '')
+                  field.onChange(e)
+                }}
               />
             )}
           />

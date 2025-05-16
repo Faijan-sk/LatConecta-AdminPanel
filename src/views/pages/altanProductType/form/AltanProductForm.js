@@ -66,8 +66,20 @@ const UserForm = ({ formData }) => {
             render={({ field }) => (
               <Input
                 {...field}
+                type="text"
                 invalid={!!errors.name}
                 placeholder="Enter Name of the product"
+                onKeyPress={(e) => {
+                  // Allow letters, numbers, and spaces only
+                  if (!/[a-zA-Z0-9 ]/.test(e.key)) {
+                    e.preventDefault()
+                  }
+                }}
+                onInput={(e) => {
+                  // Remove special characters except letters, numbers, and spaces
+                  e.target.value = e.target.value.replace(/[^a-zA-Z0-9 ]/g, '')
+                  field.onChange(e)
+                }}
               />
             )}
           />

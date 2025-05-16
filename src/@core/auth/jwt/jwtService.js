@@ -1,8 +1,8 @@
 import axios from 'axios'
 import jwtDefaultConfig from './jwtDefaultConfig'
 
-axios.defaults.baseURL = 'https://bumip.mitopup.com/'
-// axios.defaults.baseURL = 'http://192.168.29.200:8001/'
+// axios.defaults.baseURL = 'https://bumip.mitopup.com/'
+axios.defaults.baseURL = 'http://192.168.29.200:8001/'
 
 export default class JwtService {
   // ** jwtConfig <= Will be used by this service
@@ -199,7 +199,7 @@ export default class JwtService {
   }
 
   addBalance(...args) {
-    return axios.post(this.jwtConfig.balanceEndPoint, ...args)
+    return axios.post(this.jwtConfig.addBalanceEndpoint, ...args)
   }
 
   getDetailedBalance(uid) {
@@ -221,5 +221,22 @@ export default class JwtService {
   }
   getfilterTransaction(params) {
     return axios.get(`${this.jwtConfig.transactionEndPoint}${params}`)
+  }
+
+  // get reason for balanve
+  getReason() {
+    return axios.get(this.jwtConfig.reasonEndPoint)
+  }
+  getQr() {
+    return axios.post(this.jwtConfig.generateQrAuthenticatorEndPoint)
+  }
+  verifyOtp(...args) {
+    return axios.post(this.jwtConfig.verifyOtpforBarcode, ...args)
+  }
+  check2FAStatus() {
+    return axios.get(this.jwtConfig.check2FAStatus)
+  }
+  desableAuthentication() {
+    return axios.post(this.jwtConfig.desableAuthenticator)
   }
 }

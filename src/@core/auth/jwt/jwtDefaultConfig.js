@@ -15,6 +15,12 @@ export default {
   balanceByMonth: '/api/aab/',
   transactionEndPoint: '/api/tr/',
   detailedBalance: '/api/gddb?search=',
+  reasonEndPoint: 'api/rsn/',
+  addBalanceEndpoint: 'api/bm/',
+  generateQrAuthenticatorEndPoint: 'api/vbab',
+  verifyOtpforBarcode: 'api/verifyotp',
+  check2FAStatus: 'api/verify2fa',
+  desableAuthenticator: '/api/disable2fa',
 
   // ** This will be prefixed in authorization header with token
   // ? e.g. Authorization: Bearer <token>
