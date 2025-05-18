@@ -70,18 +70,22 @@ const ToastContent = ({ t, name, role }) => {
             onClick={() => toast.dismiss(t.id)}
           />
         </div>
-        <span>
+        {/* <span>
           You have successfully logged in as an {role} user to Vuexy. Now you
           can start to explore. Enjoy!
-        </span>
+        </span> */}
       </div>
     </div>
   )
 }
 
+// const defaultValues = {
+//   password: '',
+//   loginEmail: '',
+// }
 const defaultValues = {
-  password: 'admin@123',
-  loginEmail: 'admin123',
+  password: '',
+  loginEmail: '',
 }
 
 const Login = () => {
@@ -220,7 +224,7 @@ const Login = () => {
               </g>
             </g>
           </svg>
-          <h2 className="brand-text text-primary ms-1">Vuexy</h2>
+          <h2 className="brand-text text-primary ms-1">LatContecta</h2>
         </Link>
         <Col className="d-none d-lg-flex align-items-center p-5" lg="8" sm="12">
           <div className="w-100 d-lg-flex align-items-center justify-content-center px-5">
@@ -234,12 +238,12 @@ const Login = () => {
         >
           <Col className="px-xl-2 mx-auto" sm="8" md="6" lg="12">
             <CardTitle tag="h2" className="fw-bold mb-1">
-              Welcome to Vuexy! 👋
+              Welcome to LatConecta! 👋
             </CardTitle>
             <CardText className="mb-2">
               Please sign-in to your account and start the adventure
             </CardText>
-            <Alert color="primary">
+            {/* <Alert color="primary">
               <div className="alert-body font-small-2">
                 <p>
                   <small className="me-50">
@@ -263,7 +267,7 @@ const Login = () => {
               <UncontrolledTooltip target="login-tip" placement="left">
                 This is just for ACL demo purpose.
               </UncontrolledTooltip>
-            </Alert>
+            </Alert> */}
             <Form
               className="auth-login-form mt-2"
               onSubmit={handleSubmit(onSubmit)}

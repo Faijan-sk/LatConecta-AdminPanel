@@ -56,7 +56,7 @@ const container = document.getElementById('root')
 const root = createRoot(container)
 
 root.render(
-  <BrowserRouter>
+  <BrowserRouter basename="/admin-panel">
     <Provider store={store}>
       <Suspense fallback={<Spinner />}>
         <AbilityContext.Provider value={ability}>
