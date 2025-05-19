@@ -26,6 +26,7 @@ import { useForm, Controller } from 'react-hook-form'
 
 function AccountSecurity(props) {
   const { f2Astatus, checkF2fStatus } = props
+  const [localF2AStatus, setLocalF2AStatus] = useState(f2Astatus) // Local state for re-render
   const [openModal, setOpenModal] = useState(false)
   const [qrCodeData, setqrCodeData] = useState('')
   const [secondModal, setSecondModal] = useState(false)
@@ -60,6 +61,7 @@ function AccountSecurity(props) {
       await checkF2fStatus()
       toast.success('Otp Verified successfully!')
       setSecondModal(false)
+      setLocalF2AStatus(true) // Optional: reflect update after OTP
     } catch (error) {
       console.error(
         'Otp Verification Failed:',
@@ -68,9 +70,10 @@ function AccountSecurity(props) {
       toast.error('Otp Verification Failed.')
     }
   }
+
   return (
     <div>
-      {f2Astatus ? (
+      {localF2AStatus ? (
         <Card>
           <CardBody>
             <div></div>
@@ -98,9 +101,7 @@ function AccountSecurity(props) {
                       toast.success(
                         'Two-factor authentication disabled successfully.'
                       )
-
-                      // You might want to update parent state or reload page here
-                      // e.g., props.onF2AStatusChange(false) if such a method exists
+                      setLocalF2AStatus(false) // Trigger component re-render
                     }
                   } catch (err) {
                     console.error('Failed to disable 2FA:', err)
@@ -203,6 +204,10 @@ function AccountSecurity(props) {
                   control={control}
                   rules={{
                     required: 'Otp is required',
+                    pattern: {
+                      value: /^\d{6}$/, // Only 6 digits
+                      message: 'OTP must be exactly 6 digits and numeric only',
+                    },
                   }}
                   render={({ field }) => (
                     <Input
@@ -210,6 +215,7 @@ function AccountSecurity(props) {
                       {...field}
                       invalid={!!errors.otp}
                       placeholder="Enter 6-digit OTP"
+                      maxLength={6} // Optional: restrict input length
                     />
                   )}
                 />
@@ -236,5 +242,6 @@ function AccountSecurity(props) {
     </div>
   )
 }
+
 
 export default AccountSecurity
