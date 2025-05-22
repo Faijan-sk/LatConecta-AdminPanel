@@ -22,7 +22,7 @@ import {
 } from 'reactstrap'
 import { useForm, Controller } from 'react-hook-form'
 
-const UserForm = ({ formData }) => {
+const UserForm = ({ formData, onSubmitSuccess }) => {
   console.log({ formData })
   const [currencies, setCurrencies] = useState([])
 
@@ -71,6 +71,11 @@ const UserForm = ({ formData }) => {
         : await useJwt.addVendor(data)
 
       toast.success('Vendor added successfully!')
+
+      // Form submit success के बाद parent component को notify करें
+      if (onSubmitSuccess) {
+        onSubmitSuccess()
+      }
     } catch (error) {
       console.error('Add Vendor Failed:', error.response?.data || error.message)
       toast.error('Failed to add vendor.')
@@ -445,9 +450,3 @@ const UserForm = ({ formData }) => {
 }
 
 export default UserForm
-// {
-//   "id": 7,
-//   "uid": "bd18bc05-cf24-4626-83e2-35c417b6baa0",
-//   "name": "Indian Rupee",
-//   "prefix": "INR"
-// }

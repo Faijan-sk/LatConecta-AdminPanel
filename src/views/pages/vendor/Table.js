@@ -26,14 +26,9 @@ import {
 } from 'reactstrap'
 
 // ** Table Column
-
 import { columns } from './column'
 
 const VendorTable = () => {
-  // ** Store Vars
-  //   const dispatch = useDispatch()
-  //   const store = useSelector((state) => state.dataTables)
-
   // ** States
   const [currentPage, setCurrentPage] = useState(1)
   const [rowsPerPage, setRowsPerPage] = useState(7)
@@ -45,18 +40,21 @@ const VendorTable = () => {
     count: 0,
   })
 
-  // ** ToggleModla,
+  // ** Toggle Modal
   const toggle = (action = 'close', edtData = null) => {
     if (action == 'open') {
       setOpenModal(true)
       setEditData(edtData)
     } else {
       setOpenModal(false)
-      setEditData(edtData)
+      setEditData(null)
     }
   }
 
-  
+  const handleFormSubmitSuccess = () => {
+    setOpenModal(false)
+    setEditData(null)
+  }
 
   // ** Function to handle filter
   const handleFilter = (e) => {}
@@ -109,16 +107,6 @@ const VendorTable = () => {
           </Button>
         </div>
         <div className="react-dataTable m-2">
-          {/* <DataTable
-            noHeader
-            pagination
-            paginationServer
-            className="react-dataTable"
-            columns={columns}
-            sortIcon={<ChevronDown size={10} />}
-            paginationComponent={CustomPagination}
-            data={tableData.results}
-          /> */}
           <VendorList editRow={toggle} />
         </div>
       </Card>
@@ -132,7 +120,10 @@ const VendorTable = () => {
           <CardTitle>{editData ? 'Edit Vendor' : 'Add New Vendor'}</CardTitle>
         </ModalHeader>
         <ModalBody>
-          <VendorForm formData={editData} />
+          <VendorForm
+            formData={editData}
+            onSubmitSuccess={handleFormSubmitSuccess}
+          />
         </ModalBody>
       </Modal>
     </Fragment>

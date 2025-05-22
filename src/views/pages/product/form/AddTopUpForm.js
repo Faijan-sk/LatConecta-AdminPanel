@@ -22,7 +22,7 @@ import {
 } from 'reactstrap'
 import { useForm, Controller } from 'react-hook-form'
 
-const UserForm = ({ formData }) => {
+const UserForm = ({ formData, onSuccess }) => {
   console.log('Topup', formData)
   const [currencies, setCurrencies] = useState([])
   const [vendor, setVendor] = useState([])
@@ -70,7 +70,7 @@ const UserForm = ({ formData }) => {
       bundle_fee: 0,
       pt: 2,
       gb: 0,
-      dp: '',
+      dp: 0,
       nos: 0,
       ic: 0,
       oc: 0,
@@ -95,6 +95,9 @@ const UserForm = ({ formData }) => {
         : await useJwt.addProduct(data)
 
       toast.success('Product added successfully!')
+      if (onSuccess) {
+        onSuccess()
+      }
     } catch (error) {
       console.error(
         'Add Product Failed:',

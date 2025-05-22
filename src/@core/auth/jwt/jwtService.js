@@ -1,8 +1,8 @@
 import axios from 'axios'
 import jwtDefaultConfig from './jwtDefaultConfig'
 
-axios.defaults.baseURL = 'https://bumip.mitopup.com/'
-// axios.defaults.baseURL = 'http://192.168.29.200:8001/'
+// axios.defaults.baseURL = 'https://bumip.mitopup.com/'
+axios.defaults.baseURL = 'http://192.168.29.200:8001/'
 
 export default class JwtService {
   // ** jwtConfig <= Will be used by this service

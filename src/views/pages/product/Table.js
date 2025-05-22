@@ -59,6 +59,13 @@ const VendorTable = () => {
     }
   }
 
+  // ** Close Modal function
+  const closeModal = () => {
+    setOpenModal(false)
+    setEditData(null)
+    setFormType(null)
+  }
+
   // ** Get data on mount
   useEffect(() => {}, [])
 
@@ -160,7 +167,9 @@ const VendorTable = () => {
         <ModalBody>
           {console.log({ formType })}
           {formType === 'skuid' && <AddSkuidForm />}
-          {formType === 'product' && <FormSelection formData={editData} />}
+          {formType === 'product' && (
+            <FormSelection formData={editData} onSuccess={closeModal} />
+          )}
         </ModalBody>
       </Modal>
     </Fragment>

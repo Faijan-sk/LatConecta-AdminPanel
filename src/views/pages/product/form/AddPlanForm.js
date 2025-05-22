@@ -21,7 +21,7 @@ import {
 } from 'reactstrap'
 import { useForm, Controller } from 'react-hook-form'
 
-const UserForm = ({ formData }) => {
+const UserForm = ({ formData, onSuccess }) => {
   console.log('Add Plans', formData)
 
   console.log({ formData })
@@ -96,6 +96,9 @@ const UserForm = ({ formData }) => {
         : await useJwt.addProduct(data)
 
       toast.success('Product added successfully!')
+      if (onSuccess) {
+        onSuccess()
+      }
     } catch (error) {
       console.error(
         'Add Product Failed:',

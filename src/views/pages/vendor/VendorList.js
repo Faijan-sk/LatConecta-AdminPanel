@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { MoreVertical, Edit, Trash } from 'react-feather'
 import toast from 'react-hot-toast'
 import {
@@ -20,23 +20,69 @@ const TableBasic = ({ editRow }) => {
   const [vendor, setVendor] = useState([])
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedVendor, setSelectedVendor] = useState(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const intervalRef = useRef(null)
 
+  // Fetch vendors function
+  const fetchVendors = async (showToast = false) => {
+    try {
+      setIsLoading(true)
+      const res = await useJwt.getVendor()
+
+      // Check if data has changed
+      const newData = res.data
+      setVendor((prevVendors) => {
+        if (JSON.stringify(prevVendors) !== JSON.stringify(newData)) {
+          if (showToast && prevVendors.length > 0) {
+            toast.success('Data updated!')
+          }
+          return newData
+        }
+        return prevVendors
+      })
+    } catch (err) {
+      toast.error('Failed to fetch Vendor')
+      console.error(err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Initial fetch and setup polling
   useEffect(() => {
-    const fetchVendors = async () => {
-      try {
-        const res = await useJwt.getVendor()
-        setVendor(res.data)
-      } catch (err) {
-        toast.error('Failed to fetch Vendor')
-        console.error(err)
+    fetchVendors() // Initial fetch
+
+    // Set up polling every 30 seconds (adjust as needed)
+    intervalRef.current = setInterval(() => {
+      fetchVendors(true) // Show toast on updates
+    }, 30000) // 30 seconds
+
+    // Cleanup on unmount
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
       }
     }
-    fetchVendors()
+  }, [])
+
+  // Alternative: Use visibility change to refresh when tab becomes active
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchVendors(true)
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
   }, [])
 
   const confirmDelete = (vendor) => {
     setSelectedVendor(vendor)
-    setModalOpen(true)  
+    setModalOpen(true)
   }
 
   const handleConfirmedDelete = async () => {
@@ -44,6 +90,11 @@ const TableBasic = ({ editRow }) => {
       await useJwt.deleteVendor(selectedVendor.uid)
       toast.success('Vendor deleted successfully')
       setVendor((prev) => prev.filter((v) => v.id !== selectedVendor.id))
+
+      // Refresh data after delete to ensure consistency
+      setTimeout(() => {
+        fetchVendors()
+      }, 1000)
     } catch (err) {
       toast.error('Failed to delete vendor')
       console.error(err)
