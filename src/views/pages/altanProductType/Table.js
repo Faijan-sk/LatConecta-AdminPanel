@@ -119,6 +119,7 @@ const VendorTable = () => {
             paginationComponent={CustomPagination}
             data={tableData.results}
           /> */}
+          <p className="text-center">There are no records to display</p>
         </div>
       </Card>
 

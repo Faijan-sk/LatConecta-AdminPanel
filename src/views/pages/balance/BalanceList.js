@@ -32,38 +32,40 @@ const TableBasic = () => {
 
   return (
     <>
-      <Table responsive>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Balance</th>
-            <th>Currency</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {balance.map((item, index) => (
-            <tr key={item.id || index}>
-              <td>
-                <span className="align-middle fw-bold">
-                  {item.name__first_name} {item.name__last_name}
-                </span>
-              </td>
-
-              <td>{item.balance}</td>
-              <td>{item.CN}</td>
-
-              <td>
-                <Eye
-                  className="me-50 cursor-pointer"
-                  size={15}
-                  onClick={() => handleViewDetails(item.name__uid)}
-                />
-              </td>
+      {balance.length > 0 ? (
+        <Table responsive>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Balance</th>
+              <th>Currency</th>
+              <th>Action</th>
             </tr>
-          ))}
-        </tbody>
-      </Table>
+          </thead>
+          <tbody>
+            {balance.map((item, index) => (
+              <tr key={item.id || index}>
+                <td>
+                  <span className="align-middle fw-bold">
+                    {item.name__first_name} {item.name__last_name}
+                  </span>
+                </td>
+                <td>{item.balance}</td>
+                <td>{item.CN}</td>
+                <td>
+                  <Eye
+                    className="me-50 cursor-pointer"
+                    size={15}
+                    onClick={() => handleViewDetails(item.name__uid)}
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      ) : (
+        <div className="text-center py-2">There are no records to display</div>
+      )}
     </>
   )
 }

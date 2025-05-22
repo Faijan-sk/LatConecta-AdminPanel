@@ -158,7 +158,7 @@ const VendorTable = () => {
               paginationComponent={CustomPagination}
               data={tableData.results}
             /> */}
-          <BalanceList />
+          <BalanceList /> 
         </div>
       </Card>
       <Modal
