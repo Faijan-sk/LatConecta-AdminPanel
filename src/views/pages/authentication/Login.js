@@ -1,5 +1,5 @@
 // ** React Imports
-import { useContext } from 'react'
+import { useContext, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 // ** Custom Hooks
@@ -84,8 +84,8 @@ const ToastContent = ({ t, name, role }) => {
 //   loginEmail: '',
 // }
 const defaultValues = {
-  password: '',
-  loginEmail: '',
+  password: 'admin@123',
+  loginEmail: 'admin',
 }
 
 const Login = () => {
@@ -94,6 +94,7 @@ const Login = () => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const ability = useContext(AbilityContext)
+  const [loginError, setLoginError] = useState(null)
   const {
     control,
     setError,
@@ -104,6 +105,9 @@ const Login = () => {
   const source = skin === 'dark' ? illustrationsDark : illustrationsLight
 
   const onSubmit = (data) => {
+    // Clear any previous login errors
+    setLoginError(null)
+
     if (Object.values(data).every((field) => field.length > 0)) {
       useJwt
         .login({ username: data.loginEmail, password: data.password })
@@ -138,10 +142,26 @@ const Login = () => {
         })
         .catch((err) => {
           console.log(err)
-          setError('loginEmail', {
-            type: 'manual',
-            message: err.response.data.error,
-          })
+
+          // Check if the error is a 401 Unauthorized error
+          if (err.response && err.response.status === 401) {
+            // Set a generic error message for incorrect credentials
+            setLoginError(
+              'Invalid username or password. Please check your credentials and try again.'
+            )
+          } else if (
+            err.response &&
+            err.response.data &&
+            err.response.data.error
+          ) {
+            // If there's a specific error message in the response, use that
+            setLoginError(err.response.data.error)
+          } else {
+            // Generic error message for other errors
+            setLoginError(
+              'An error occurred during login. Please try again later.'
+            )
+          }
         })
     } else {
       for (const key in data) {
@@ -243,31 +263,14 @@ const Login = () => {
             <CardText className="mb-2">
               Please sign-in to your account and start the adventure
             </CardText>
-            {/* <Alert color="primary">
-              <div className="alert-body font-small-2">
-                <p>
-                  <small className="me-50">
-                    <span className="fw-bold">Admin:</span> admin@demo.com |
-                    admin
-                  </small>
-                </p>
-                <p>
-                  <small className="me-50">
-                    <span className="fw-bold">Client:</span> client@demo.com |
-                    client
-                  </small>
-                </p>
-              </div>
-              <HelpCircle
-                id="login-tip"
-                className="position-absolute"
-                size={18}
-                style={{ top: '10px', right: '10px' }}
-              />
-              <UncontrolledTooltip target="login-tip" placement="left">
-                This is just for ACL demo purpose.
-              </UncontrolledTooltip>
-            </Alert> */}
+
+            {/* Display login error alert if there is one */}
+            {loginError && (
+              <Alert color="danger">
+                <div className="alert-body">{loginError}</div>
+              </Alert>
+            )}
+
             <Form
               className="auth-login-form mt-2"
               onSubmit={handleSubmit(onSubmit)}

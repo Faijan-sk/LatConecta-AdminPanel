@@ -37,7 +37,7 @@ const UserForm = ({ formData }) => {
   const onSubmit = async (data) => {
     console.log('Form submitted:', data)
     try {
-      const response = await useJwt.addCurrency(data)
+      const response = await useJwt.addAltanProduct(data)
       toast.success('Product added successfully!')
     } catch (error) {
       console.error(

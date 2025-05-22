@@ -39,24 +39,24 @@ const Router = () => {
     {
       path: '/',
       index: true,
-      element: <Navigate replace to={getHomeRoute()} />
+      element: <Navigate replace to={getHomeRoute()} />,
     },
     {
       path: '/login',
       element: <BlankLayout />,
-      children: [{ path: '/login', element: <Login /> }]
+      children: [{ path: '/login', element: <Login /> }],
     },
     {
       path: '/auth/not-auth',
       element: <BlankLayout />,
-      children: [{ path: '/auth/not-auth', element: <NotAuthorized /> }]
+      children: [{ path: '/auth/not-auth', element: <NotAuthorized /> }],
     },
     {
       path: '*',
       element: <BlankLayout />,
-      children: [{ path: '*', element: <Error /> }]
+      children: [{ path: '*', element: <Error /> }],
     },
-    ...allRoutes
+    ...allRoutes,
   ])
 
   return routes

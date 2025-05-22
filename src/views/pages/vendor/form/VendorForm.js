@@ -308,12 +308,12 @@ const UserForm = ({ formData }) => {
           <Controller
             name="mobile"
             control={control}
-            defaultValue="1234569870"
+            defaultValue=""
             rules={{
               required: 'Mobile is required',
               pattern: {
-                value: /^[0-9]{10,15}$/,
-                message: 'Enter a valid mobile number',
+                value: /^[0-9]{10}$/, // exactly 10 digits
+                message: 'Enter a valid 10-digit mobile number',
               },
             }}
             render={({ field }) => (
@@ -321,13 +321,17 @@ const UserForm = ({ formData }) => {
                 {...field}
                 placeholder="Enter mobile number"
                 invalid={!!errors.mobile}
+                maxLength={10}
                 onKeyPress={(e) => {
+                  // Allow only digits
                   if (!/[0-9]/.test(e.key)) {
                     e.preventDefault()
                   }
                 }}
                 onInput={(e) => {
-                  e.target.value = e.target.value.replace(/[^0-9]/g, '')
+                  // Strip non-numeric and enforce 10 digits max
+                  let value = e.target.value.replace(/[^0-9]/g, '').slice(0, 10)
+                  e.target.value = value
                   field.onChange(e)
                 }}
               />

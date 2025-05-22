@@ -43,9 +43,10 @@ export default class JwtService {
 
         // ** if (status === 401) {
         if (response && response.status === 401) {
-          if (window.location.pathname !== '/login') {
+          if (window.location.pathname !== '/admin-panel/login') {
             localStorage.removeItem('userData')
-            window.location.href = '/login'
+            window.location.href = '/admin-panel/login'
+            return Promise.reject(error)
           }
           if (!this.isAlreadyFetchingAccessToken) {
             this.isAlreadyFetchingAccessToken = true
