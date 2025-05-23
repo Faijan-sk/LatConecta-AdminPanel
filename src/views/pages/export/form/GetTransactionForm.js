@@ -216,7 +216,7 @@ const UserForm = ({ setFilterData, limit, offset }) => {
 
   const status = [
     { uid: '1', value: 'Success' },
-    { uid: '2', value: 'Failed' },
+    { uid: '2', value: 'Fail' },
   ]
 
   const format = [

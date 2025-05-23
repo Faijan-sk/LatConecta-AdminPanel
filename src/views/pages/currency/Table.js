@@ -12,8 +12,8 @@ import {
 } from 'reactstrap'
 
 import CurrencyList from './CurrencyList'
-import CurrencyForm from './form/CurrencyForm'
 import { columns } from './column'
+import AddCurrencyForm from './form/CurrencyForm'
 
 const CurrencyTable = () => {
   const [currentPage, setCurrentPage] = useState(1)
@@ -89,11 +89,11 @@ const CurrencyTable = () => {
           </CardTitle>
         </ModalHeader>
         <ModalBody>
-          <CurrencyForm
+          <AddCurrencyForm
             formData={editData}
             onSuccess={() => {
-              triggerRefresh()
-              toggle('close')
+              toggle('close') // close modal after success
+              triggerRefresh() // refresh list
             }}
           />
         </ModalBody>

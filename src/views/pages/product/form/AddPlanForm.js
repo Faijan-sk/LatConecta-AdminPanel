@@ -29,6 +29,7 @@ const UserForm = ({ formData, onSuccess }) => {
   const [vendor, setVendor] = useState([])
   const [skuid, setSkuid] = useState([])
   const [selectedCurrency, setSelectedCurrency] = useState('') // Store the selected currency name and prefix
+  const [isSubmitting, setIsSubmitting] = useState(false) // Loading state
 
   useEffect(() => {
     const fetchCurrencies = async () => {
@@ -58,6 +59,8 @@ const UserForm = ({ formData, onSuccess }) => {
     handleSubmit,
     control,
     setValue,
+    setError,
+    clearErrors,
     formState: { errors },
     reset,
   } = useForm({
@@ -68,12 +71,12 @@ const UserForm = ({ formData, onSuccess }) => {
       pcrn: '',
       bundle_fee: '',
       pt: 1,
-      gb: '',
+      gb: 0,
       dp: '0',
-      nos: '',
-      ic: '',
-      oc: '',
-      eso: '',
+      nos: 0,
+      ic: 0,
+      oc: 0,
+      eso: 0,
       Skuid: '',
       pdn: '',
       alias_name: '',
@@ -86,8 +89,99 @@ const UserForm = ({ formData, onSuccess }) => {
     },
   })
 
+  // Field mapping for API errors to form fields
+  const fieldMapping = {
+    vendor: 'vn',
+    vendor_id: 'vn',
+    amount: 'amt',
+    currency: 'crn',
+    currency_id: 'crn',
+    bundle_fee: 'bundle_fee',
+    data: 'gb',
+    gb_data: 'gb',
+    sms: 'nos',
+    number_of_sms: 'nos',
+    incoming_call: 'ic',
+    outgoing_call: 'oc',
+    special_offer: 'eso',
+    sku_id: 'Skuid',
+    skuid: 'Skuid',
+    product_denomination_name: 'pdn',
+    alias_name: 'alias_name',
+    product_category: 'product_category',
+  }
+
+  // Function to handle API field errors
+  const handleFieldErrors = (errorData) => {
+    // Clear previous errors
+    clearErrors()
+
+    if (errorData && typeof errorData === 'object') {
+      // Handle different error response formats
+      let errors = {}
+
+      // Format 1: Direct field errors object
+      if (errorData.errors) {
+        errors = errorData.errors
+      }
+      // Format 2: Field errors in data property
+      else if (errorData.data && errorData.data.errors) {
+        errors = errorData.data.errors
+      }
+      // Format 3: Direct error object
+      else {
+        errors = errorData
+      }
+
+      // Set errors for each field
+      Object.keys(errors).forEach((key) => {
+        const formField = fieldMapping[key] || key
+        const errorMessage = Array.isArray(errors[key])
+          ? errors[key][0]
+          : errors[key]
+
+        if (errorMessage) {
+          setError(formField, {
+            type: 'server',
+            message: errorMessage,
+          })
+        }
+      })
+
+      // Show generic toast if no specific field errors
+      const hasFieldErrors = Object.keys(errors).some(
+        (key) =>
+          fieldMapping[key] ||
+          key in
+            [
+              'vn',
+              'amt',
+              'crn',
+              'bundle_fee',
+              'gb',
+              'nos',
+              'ic',
+              'oc',
+              'eso',
+              'Skuid',
+              'pdn',
+              'alias_name',
+              'product_category',
+            ]
+      )
+
+      if (!hasFieldErrors) {
+        toast.error(errorData.message || 'Please check the form for errors')
+      }
+    }
+  }
+
   const onSubmit = async (data) => {
     console.log('Form submitted:', data)
+    setIsSubmitting(true)
+
+    // Clear previous errors
+    clearErrors()
 
     try {
       console.log(data.uid)
@@ -104,7 +198,16 @@ const UserForm = ({ formData, onSuccess }) => {
         'Add Product Failed:',
         error.response?.data || error.message
       )
-      toast.error('Failed to add Product.')
+
+      // Handle field-specific errors
+      if (error.response?.data) {
+        handleFieldErrors(error.response.data)
+      } else {
+        // Generic error
+        toast.error('Failed to add Product. Please try again.')
+      }
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -149,7 +252,9 @@ const UserForm = ({ formData, onSuccess }) => {
               </Input>
             )}
           />
-          <FormFeedback>{errors.product_category?.message}</FormFeedback>
+          {errors.product_category && (
+            <FormFeedback>{errors.product_category.message}</FormFeedback>
+          )}
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
@@ -169,7 +274,7 @@ const UserForm = ({ formData, onSuccess }) => {
               </Input>
             )}
           />
-          <FormFeedback>{errors.vn?.message}</FormFeedback>
+          {errors.vn && <FormFeedback>{errors.vn.message}</FormFeedback>}
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
@@ -206,7 +311,7 @@ const UserForm = ({ formData, onSuccess }) => {
               </Input>
             )}
           />
-          <FormFeedback>{errors.crn?.message}</FormFeedback>
+          {errors.crn && <FormFeedback>{errors.crn.message}</FormFeedback>}
         </Col>
 
         {/* Hidden field for pcrn */}
@@ -255,7 +360,7 @@ const UserForm = ({ formData, onSuccess }) => {
               />
             )}
           />
-          <FormFeedback>{errors.amt?.message}</FormFeedback>
+          {errors.amt && <FormFeedback>{errors.amt.message}</FormFeedback>}
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
@@ -295,7 +400,9 @@ const UserForm = ({ formData, onSuccess }) => {
               />
             )}
           />
-          <FormFeedback>{errors.bundle_fee?.message}</FormFeedback>
+          {errors.bundle_fee && (
+            <FormFeedback>{errors.bundle_fee.message}</FormFeedback>
+          )}
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
@@ -304,7 +411,6 @@ const UserForm = ({ formData, onSuccess }) => {
             name="gb"
             control={control}
             defaultValue=""
-            rules={{ required: 'Data is required' }}
             render={({ field }) => (
               <Input
                 {...field}
@@ -335,7 +441,7 @@ const UserForm = ({ formData, onSuccess }) => {
               />
             )}
           />
-          <FormFeedback>{errors.gb?.message}</FormFeedback>
+          {errors.gb && <FormFeedback>{errors.gb.message}</FormFeedback>}
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
@@ -344,7 +450,6 @@ const UserForm = ({ formData, onSuccess }) => {
             name="nos"
             control={control}
             defaultValue=""
-            rules={{ required: 'SMS is required' }}
             render={({ field }) => (
               <Input
                 {...field}
@@ -365,7 +470,7 @@ const UserForm = ({ formData, onSuccess }) => {
               />
             )}
           />
-          <FormFeedback>{errors.nos?.message}</FormFeedback>
+          {errors.nos && <FormFeedback>{errors.nos.message}</FormFeedback>}
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
@@ -374,7 +479,6 @@ const UserForm = ({ formData, onSuccess }) => {
             name="ic"
             control={control}
             defaultValue=""
-            rules={{ required: 'Incoming call is required' }}
             render={({ field }) => (
               <Input
                 {...field}
@@ -384,7 +488,7 @@ const UserForm = ({ formData, onSuccess }) => {
               />
             )}
           />
-          <FormFeedback>{errors.ic?.message}</FormFeedback>
+          {errors.ic && <FormFeedback>{errors.ic.message}</FormFeedback>}
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
@@ -393,7 +497,6 @@ const UserForm = ({ formData, onSuccess }) => {
             name="oc"
             control={control}
             defaultValue="1234569870"
-            rules={{ required: 'Outgoing Call is required' }}
             render={({ field }) => (
               <Input
                 type="number"
@@ -403,7 +506,7 @@ const UserForm = ({ formData, onSuccess }) => {
               />
             )}
           />
-          <FormFeedback>{errors.oc?.message}</FormFeedback>
+          {errors.oc && <FormFeedback>{errors.oc.message}</FormFeedback>}
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
@@ -412,7 +515,6 @@ const UserForm = ({ formData, onSuccess }) => {
             name="eso"
             control={control}
             defaultValue={14}
-            rules={{ required: 'Special offer is required' }}
             render={({ field }) => (
               <Input
                 {...field}
@@ -433,7 +535,7 @@ const UserForm = ({ formData, onSuccess }) => {
               />
             )}
           />
-          <FormFeedback>{errors.eso?.message}</FormFeedback>
+          {errors.eso && <FormFeedback>{errors.eso.message}</FormFeedback>}
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
@@ -463,7 +565,7 @@ const UserForm = ({ formData, onSuccess }) => {
               />
             )}
           />
-          <FormFeedback>{errors.Skuid?.message}</FormFeedback>
+          {errors.Skuid && <FormFeedback>{errors.Skuid.message}</FormFeedback>}
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
@@ -493,7 +595,7 @@ const UserForm = ({ formData, onSuccess }) => {
               />
             )}
           />
-          <FormFeedback>{errors.pdn?.message}</FormFeedback>
+          {errors.pdn && <FormFeedback>{errors.pdn.message}</FormFeedback>}
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
@@ -523,11 +625,13 @@ const UserForm = ({ formData, onSuccess }) => {
               />
             )}
           />
-          <FormFeedback>{errors.alias_name?.message}</FormFeedback>
+          {errors.alias_name && (
+            <FormFeedback>{errors.alias_name.message}</FormFeedback>
+          )}
         </Col>
 
-        <Button type="submit" color="primary">
-          Submit
+        <Button type="submit" color="primary" disabled={isSubmitting}>
+          {isSubmitting ? 'Submitting...' : 'Submit'}
         </Button>
       </Row>
     </Form>

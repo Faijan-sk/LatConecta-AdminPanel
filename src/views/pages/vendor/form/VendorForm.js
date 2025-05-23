@@ -23,8 +23,8 @@ import {
 import { useForm, Controller } from 'react-hook-form'
 
 const UserForm = ({ formData, onSubmitSuccess }) => {
-  console.log({ formData })
   const [currencies, setCurrencies] = useState([])
+  const [isSubmitting, setIsSubmitting] = useState(false) // Loading state
 
   //**  Fetch currencies on load
   useEffect(() => {
@@ -46,6 +46,8 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
     control,
     formState: { errors },
     reset,
+    setError,
+    clearErrors,
     watch,
   } = useForm({
     defaultValues: {
@@ -64,7 +66,103 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
     },
   })
 
+  // Field mapping for API errors to form fields
+  const fieldMapping = {
+    user_name: 'username',
+    userName: 'username',
+    first_name: 'first_name',
+    firstName: 'first_name',
+    last_name: 'last_name',
+    lastName: 'last_name',
+    email_address: 'email',
+    emailAddress: 'email',
+    email: 'email',
+    password: 'password',
+    country_code: 'country_code',
+    countryCode: 'country_code',
+    mobile_number: 'mobile',
+    mobileNumber: 'mobile',
+    mobile: 'mobile',
+    phone: 'mobile',
+    tca: 'tca',
+    pca: 'pca',
+    soca: 'soca',
+    soct: 'soct',
+    currency: 'crn',
+    currency_id: 'crn',
+    currencyId: 'crn',
+    crn: 'crn',
+  }
+
+  // Function to handle API field errors
+  const handleFieldErrors = (errorData) => {
+    // Clear previous errors
+    clearErrors()
+
+    if (errorData && typeof errorData === 'object') {
+      // Handle different error response formats
+      let errors = {}
+
+      // Format 1: Direct field errors object
+      if (errorData.errors) {
+        errors = errorData.errors
+      }
+      // Format 2: Field errors in data property
+      else if (errorData.data && errorData.data.errors) {
+        errors = errorData.data.errors
+      }
+      // Format 3: Direct error object
+      else {
+        errors = errorData
+      }
+
+      // Set errors for each field
+      Object.keys(errors).forEach((key) => {
+        const formField = fieldMapping[key] || key
+        const errorMessage = Array.isArray(errors[key])
+          ? errors[key][0]
+          : errors[key]
+
+        if (errorMessage) {
+          setError(formField, {
+            type: 'server',
+            message: errorMessage,
+          })
+        }
+      })
+
+      // Show generic toast if no specific field errors were mapped
+      const hasFieldErrors = Object.keys(errors).some(
+        (key) =>
+          fieldMapping[key] ||
+          [
+            'username',
+            'first_name',
+            'last_name',
+            'email',
+            'password',
+            'country_code',
+            'mobile',
+            'tca',
+            'pca',
+            'soca',
+            'soct',
+            'crn',
+          ].includes(key)
+      )
+
+      if (!hasFieldErrors) {
+        toast.error(errorData.message || 'Please check the form for errors')
+      }
+    }
+  }
+
   const onSubmit = async (data) => {
+    setIsSubmitting(true)
+
+    // Clear previous errors
+    clearErrors()
+
     try {
       data.uid
         ? await useJwt.editVendor(data.uid, data)
@@ -72,13 +170,21 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
 
       toast.success('Vendor added successfully!')
 
-      // Form submit success के बाद parent component को notify करें
       if (onSubmitSuccess) {
         onSubmitSuccess()
       }
     } catch (error) {
       console.error('Add Vendor Failed:', error.response?.data || error.message)
-      toast.error('Failed to add vendor.')
+
+      // Handle field-specific errors
+      if (error.response?.data) {
+        handleFieldErrors(error.response.data)
+      } else {
+        // Generic error
+        toast.error('Failed to add vendor. Please try again.')
+      }
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -105,20 +211,20 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
                 invalid={!!errors.username}
                 placeholder="Enter username"
                 onKeyPress={(e) => {
-                  // Allow only letters (a-z, A-Z) and underscore
                   if (!/[a-zA-Z_]/.test(e.key)) {
                     e.preventDefault()
                   }
                 }}
                 onInput={(e) => {
-                  // Remove anything other than letters and underscore
                   e.target.value = e.target.value.replace(/[^a-zA-Z_]/g, '')
                   field.onChange(e)
                 }}
               />
             )}
           />
-          <FormFeedback>{errors.username?.message}</FormFeedback>
+          {errors.username && (
+            <FormFeedback>{errors.username.message}</FormFeedback>
+          )}
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
@@ -129,7 +235,7 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
             rules={{
               required: 'First name is required',
               pattern: {
-                value: /^[A-Za-z]+$/, // only letters, no spaces, no numbers, no special chars
+                value: /^[A-Za-z]+$/,
                 message: 'First name can only contain letters without spaces',
               },
             }}
@@ -139,19 +245,20 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
                 invalid={!!errors.first_name}
                 placeholder="Enter first name"
                 onChange={(e) => {
-                  // Remove anything that is not A-Z or a-z
                   const onlyLetters = e.target.value.replace(/[^A-Za-z]/g, '')
                   field.onChange(onlyLetters)
                 }}
                 onKeyDown={(e) => {
                   if (e.key === ' ') {
-                    e.preventDefault() // Prevent space key press
+                    e.preventDefault()
                   }
                 }}
               />
             )}
           />
-          <FormFeedback>{errors.first_name?.message}</FormFeedback>
+          {errors.first_name && (
+            <FormFeedback>{errors.first_name.message}</FormFeedback>
+          )}
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
@@ -162,7 +269,7 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
             rules={{
               required: 'Last name is required',
               pattern: {
-                value: /^[A-Za-z]+$/, // Only letters
+                value: /^[A-Za-z]+$/,
                 message: 'Last name can only contain letters without spaces',
               },
             }}
@@ -177,13 +284,15 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
                 }}
                 onKeyDown={(e) => {
                   if (e.key === ' ') {
-                    e.preventDefault() // Block space key
+                    e.preventDefault()
                   }
                 }}
               />
             )}
           />
-          <FormFeedback>{errors.last_name?.message}</FormFeedback>
+          {errors.last_name && (
+            <FormFeedback>{errors.last_name.message}</FormFeedback>
+          )}
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
@@ -195,7 +304,6 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
             rules={{
               required: 'Email is required',
               pattern: {
-                // Allows only alphanumeric + @ + . (no spaces, no other special characters)
                 value: /^[a-zA-Z0-9@.]+$/,
                 message:
                   'Only alphanumeric characters, "@" and "." are allowed',
@@ -259,7 +367,9 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
               />
             )}
           />
-          <FormFeedback>{errors.password?.message}</FormFeedback>
+          {errors.password && (
+            <FormFeedback>{errors.password.message}</FormFeedback>
+          )}
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
@@ -289,7 +399,6 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
                     'ArrowRight',
                     'Tab',
                   ]
-                  // Allow numbers and '+' only
                   const isNumber = /^[0-9]$/.test(e.key)
                   const isPlus = e.key === '+'
                   if (!isNumber && !isPlus && !allowedKeys.includes(e.key)) {
@@ -305,7 +414,9 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
               />
             )}
           />
-          <FormFeedback>{errors.country_code?.message}</FormFeedback>
+          {errors.country_code && (
+            <FormFeedback>{errors.country_code.message}</FormFeedback>
+          )}
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
@@ -317,7 +428,7 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
             rules={{
               required: 'Mobile is required',
               pattern: {
-                value: /^[0-9]{10}$/, // exactly 10 digits
+                value: /^[0-9]{10}$/,
                 message: 'Enter a valid 10-digit mobile number',
               },
             }}
@@ -328,13 +439,11 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
                 invalid={!!errors.mobile}
                 maxLength={10}
                 onKeyPress={(e) => {
-                  // Allow only digits
                   if (!/[0-9]/.test(e.key)) {
                     e.preventDefault()
                   }
                 }}
                 onInput={(e) => {
-                  // Strip non-numeric and enforce 10 digits max
                   let value = e.target.value.replace(/[^0-9]/g, '').slice(0, 10)
                   e.target.value = value
                   field.onChange(e)
@@ -342,7 +451,9 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
               />
             )}
           />
-          <FormFeedback>{errors.mobile?.message}</FormFeedback>
+          {errors.mobile && (
+            <FormFeedback>{errors.mobile.message}</FormFeedback>
+          )}
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
@@ -361,7 +472,7 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
               />
             )}
           />
-          <FormFeedback>{errors.tca?.message}</FormFeedback>
+          {errors.tca && <FormFeedback>{errors.tca.message}</FormFeedback>}
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
@@ -380,7 +491,7 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
               />
             )}
           />
-          <FormFeedback>{errors.pca?.message}</FormFeedback>
+          {errors.pca && <FormFeedback>{errors.pca.message}</FormFeedback>}
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
@@ -399,7 +510,7 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
               />
             )}
           />
-          <FormFeedback>{errors.soca?.message}</FormFeedback>
+          {errors.soca && <FormFeedback>{errors.soca.message}</FormFeedback>}
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
@@ -418,7 +529,7 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
               />
             )}
           />
-          <FormFeedback>{errors.soct?.message}</FormFeedback>
+          {errors.soct && <FormFeedback>{errors.soct.message}</FormFeedback>}
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
@@ -438,11 +549,11 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
               </Input>
             )}
           />
-          <FormFeedback>{errors.crn?.message}</FormFeedback>
+          {errors.crn && <FormFeedback>{errors.crn.message}</FormFeedback>}
         </Col>
 
-        <Button type="submit" color="primary">
-          Submit
+        <Button type="submit" color="primary" disabled={isSubmitting}>
+          {isSubmitting ? 'Submitting...' : 'Submit'}
         </Button>
       </Row>
     </Form>
