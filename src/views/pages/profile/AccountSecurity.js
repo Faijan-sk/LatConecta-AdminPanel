@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 
 // ** Reactstrap Imports
 import {
@@ -31,6 +31,15 @@ function AccountSecurity(props) {
   const [qrCodeData, setqrCodeData] = useState('')
   const [secondModal, setSecondModal] = useState(false)
 
+  // Debug logs to check status
+  console.log('f2Astatus prop:', f2Astatus)
+  console.log('localF2AStatus:', localF2AStatus)
+
+  // Update local state when prop changes
+  useEffect(() => {
+    setLocalF2AStatus(f2Astatus)
+  }, [f2Astatus])
+
   const toggle = async () => {
     try {
       const { data } = await useJwt.getQr()
@@ -59,15 +68,38 @@ function AccountSecurity(props) {
     try {
       await useJwt.verifyOtp(data)
       await checkF2fStatus()
-      toast.success('Otp Verified successfully!')
+      toast.success('OTP Verified successfully!')
       setSecondModal(false)
-      setLocalF2AStatus(true) // Optional: reflect update after OTP
+      reset() // Reset the form
+      setLocalF2AStatus(true) // Update local state to show enabled UI
     } catch (error) {
       console.error(
-        'Otp Verification Failed:',
+        'OTP Verification Failed:',
         error.response?.data || error.message
       )
-      toast.error('Otp Verification Failed.')
+      toast.error('OTP Verification Failed.')
+    }
+  }
+
+  const handleDisable2FA = async (e) => {
+    const isEnabled = e.target.checked
+
+    try {
+      if (!isEnabled) {
+        // Call API to disable 2FA
+        await useJwt.desableAuthentication()
+        toast.success('Two-factor authentication disabled successfully.')
+        setLocalF2AStatus(false) // Update local state
+        await checkF2fStatus() // Refresh status from parent
+      } else {
+        // If user tries to enable again, show enable flow
+        setLocalF2AStatus(true)
+      }
+    } catch (err) {
+      console.error('Failed to disable 2FA:', err)
+      toast.error('Failed to disable two-factor authentication.')
+      // Reset switch to previous state on error
+      e.target.checked = true
     }
   }
 
@@ -76,89 +108,113 @@ function AccountSecurity(props) {
       {localF2AStatus ? (
         <Card>
           <CardBody>
-            <div></div>
-            <div>
-              <h4>
-                Two-step verification Two factor authentication is already
-                enabled.
-              </h4>
-              <p>Authentication to Disable:</p>
+            <div className="d-flex align-items-center mb-3">
+              <div className="me-3">
+                <i
+                  className="fas fa-shield-alt text-success"
+                  style={{ fontSize: '24px' }}
+                ></i>
+              </div>
+              <div>
+                <h4 className="mb-1">Two-Factor Authentication Enabled</h4>
+                <p className="mb-0 text-muted">
+                  Your account is secured with 2FA
+                </p>
+              </div>
             </div>
 
-            <div className="form-switch form-check-primary">
-              <Input
-                type="switch"
-                id="switch-primary"
-                name="primary"
-                defaultChecked
-                onChange={async (e) => {
-                  const isEnabled = e.target.checked
-
-                  try {
-                    if (!isEnabled) {
-                      // Call API to disable 2FA
-                      await useJwt.desableAuthentication()
-                      toast.success(
-                        'Two-factor authentication disabled successfully.'
-                      )
-                      setLocalF2AStatus(false) // Trigger component re-render
-                    }
-                  } catch (err) {
-                    console.error('Failed to disable 2FA:', err)
-                    toast.error('Failed to disable two-factor authentication.')
-                  }
-                }}
-              />
+            <div className="d-flex justify-content-between align-items-center">
+              <div>
+                <h6>Disable Two-Factor Authentication</h6>
+                <p className="text-muted small">
+                  Turn off 2FA for your account
+                </p>
+              </div>
+              <div className="form-switch form-check-primary">
+                <Input
+                  type="switch"
+                  id="switch-primary"
+                  name="primary"
+                  defaultChecked={localF2AStatus}
+                  onChange={handleDisable2FA}
+                />
+              </div>
             </div>
           </CardBody>
         </Card>
       ) : (
         <Card>
           <CardBody>
-            <h4>Two-factor authentication is not enabled yet.</h4>
-            <p>
+            <div className="d-flex align-items-center mb-3">
+              <div className="me-3">
+                <i
+                  className="fas fa-shield-alt text-warning"
+                  style={{ fontSize: '24px' }}
+                ></i>
+              </div>
+              <div>
+                <h4 className="mb-1">Two-Factor Authentication</h4>
+                <p className="mb-0 text-muted">Not enabled</p>
+              </div>
+            </div>
+
+            <p className="mb-3">
               Two-factor authentication adds an additional layer of security to
               your account by requiring more than just a password to log in.
             </p>
+
             <Button
               color="primary"
-              className="d-flex align-items-center gap-1"
+              className="d-flex align-items-center gap-2"
               onClick={toggle}
             >
-              Enable two-factor authentication
+              <i className="fas fa-plus"></i>
+              Enable Two-Factor Authentication
             </Button>
           </CardBody>
         </Card>
       )}
 
-      {/* First Modal */}
+      {/* First Modal - QR Code Display */}
       <Modal
         isOpen={openModal}
         toggle={() => setOpenModal(false)}
         className="modal-dialog-centered modal-lg"
       >
         <ModalHeader toggle={() => setOpenModal(false)}>
-          <CardTitle tag="h4">Add Authenticator App</CardTitle>
+          <CardTitle tag="h4">Setup Authenticator App</CardTitle>
         </ModalHeader>
         <ModalBody>
-          <p>
-            Using an authenticator app like Google Authenticator, Microsoft
-            Authenticator, Authy, or 1Password, scan the QR code. It will
-            generate a 6-digit code for you to enter below.
-          </p>
-          <div className="text-center">
-            <img
-              src={`data:image/png;base64,${qrCodeData}`}
-              alt="QR Code"
-              style={{
-                maxWidth: '200px',
-                margin: '20px auto',
-                display: 'block',
-              }}
-            />
+          <div className="text-center mb-4">
+            <h5>Step 1: Scan QR Code</h5>
+            <p className="text-muted">
+              Using an authenticator app like Google Authenticator, Microsoft
+              Authenticator, Authy, or 1Password, scan the QR code below.
+            </p>
           </div>
 
-          <div className="text-center mt-2">
+          <div className="text-center mb-4">
+            {qrCodeData ? (
+              <img
+                src={`data:image/png;base64,${qrCodeData}`}
+                alt="QR Code for 2FA Setup"
+                style={{
+                  maxWidth: '200px',
+                  margin: '20px auto',
+                  display: 'block',
+                  border: '1px solid #ddd',
+                  padding: '10px',
+                  borderRadius: '8px',
+                }}
+              />
+            ) : (
+              <div className="spinner-border" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+            )}
+          </div>
+
+          <div className="text-center">
             <Button
               className="me-2"
               color="secondary"
@@ -172,41 +228,43 @@ function AccountSecurity(props) {
                 setOpenModal(false)
                 setSecondModal(true)
               }}
+              disabled={!qrCodeData}
             >
-              Continue
+              I've Scanned the Code
             </Button>
           </div>
         </ModalBody>
       </Modal>
 
-      {/* Second Modal */}
+      {/* Second Modal - OTP Verification */}
       <Modal
         isOpen={secondModal}
         toggle={() => setSecondModal(false)}
         className="modal-dialog-centered"
       >
         <ModalHeader toggle={() => setSecondModal(false)}>
-          <CardTitle tag="h4">Add Authenticator App</CardTitle>
+          <CardTitle tag="h4">Verify Setup</CardTitle>
         </ModalHeader>
         <ModalBody>
-          <h5>Authenticator Apps</h5>
-          <p>
-            Using an authenticator app like Google Authenticator, Microsoft
-            Authenticator, Authy, or 1Password, scan the QR code. It will
-            generate a 6-digit code for you to enter below.
-          </p>
+          <div className="text-center mb-4">
+            <h5>Step 2: Enter Verification Code</h5>
+            <p className="text-muted">
+              Enter the 6-digit code generated by your authenticator app to
+              complete the setup.
+            </p>
+          </div>
 
           <Form onSubmit={handleSubmit(onSubmit)}>
             <Row>
-              <Col sm="12" md="12" className="mb-2">
+              <Col sm="12" className="mb-3">
                 <Controller
                   name="otp"
                   control={control}
                   rules={{
-                    required: 'Otp is required',
+                    required: 'OTP is required',
                     pattern: {
                       value: /^\d{6}$/, // Only 6 digits
-                      message: 'OTP must be exactly 6 digits and numeric only',
+                      message: 'OTP must be exactly 6 digits',
                     },
                   }}
                   render={({ field }) => (
@@ -214,12 +272,16 @@ function AccountSecurity(props) {
                       type="text"
                       {...field}
                       invalid={!!errors.otp}
-                      placeholder="Enter 6-digit OTP"
-                      maxLength={6} // Optional: restrict input length
+                      placeholder="Enter 6-digit code"
+                      maxLength={6}
+                      className="text-center"
+                      style={{ fontSize: '18px', letterSpacing: '4px' }}
                     />
                   )}
                 />
-                <FormFeedback>{errors.otp?.message}</FormFeedback>
+                {errors.otp && (
+                  <FormFeedback>{errors.otp.message}</FormFeedback>
+                )}
               </Col>
             </Row>
 
@@ -228,12 +290,15 @@ function AccountSecurity(props) {
                 className="me-2"
                 color="secondary"
                 type="button"
-                onClick={() => setSecondModal(false)}
+                onClick={() => {
+                  setSecondModal(false)
+                  reset()
+                }}
               >
                 Cancel
               </Button>
               <Button color="primary" type="submit">
-                Verify
+                Verify & Enable
               </Button>
             </div>
           </Form>
@@ -242,6 +307,5 @@ function AccountSecurity(props) {
     </div>
   )
 }
-
 
 export default AccountSecurity

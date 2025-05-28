@@ -29,11 +29,24 @@ import {
 import { useForm, Controller } from 'react-hook-form'
 
 const UserForm = ({ formData }) => {
-  console.log({ formData })
   const [currencies, setCurrencies] = useState([])
+  const [usernameError, setUsernameError] = useState('')
+  const [firstNameError, setFirstNameError] = useState('')
+  const [lastNameError, setLastNameError] = useState('')
+  const [emailInputError, setEmailInputError] = useState('')
+  const [mobileInputError, setMobileInputError] = useState('')
+  const [companyInputError, setCompanyInputError] = useState('')
+  const [dwipInputError, setDwipInputError] = useState('')
+  const [pwipInputError, setPwipInputError] = useState('')
+  const [spwipInputError, setSpwipInputError] = useState('')
+  const [sdwipInputError, setSdwipInputError] = useState('')
+  const [passwordError, setPasswordError] = useState('')
+  const [currencyError, setCurrencyError] = useState('')
+
+  // Loading state for submit button
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Fetch currencies on load
-
   useEffect(() => {
     const fetchCurrencies = async () => {
       try {
@@ -53,6 +66,8 @@ const UserForm = ({ formData }) => {
     control,
     formState: { errors },
     reset,
+    setError,
+    clearErrors,
   } = useForm({
     defaultValues: {
       username: '',
@@ -69,27 +84,118 @@ const UserForm = ({ formData }) => {
       spwip: '',
     },
   })
-  const colorOptions = [
-    { value: 'ocean', label: 'Ocean', color: '#00B8D9', isFixed: true },
-    { value: 'blue', label: 'Blue', color: '#0052CC', isFixed: true },
-    { value: 'purple', label: 'Purple', color: '#5243AA', isFixed: true },
-    { value: 'red', label: 'Red', color: '#FF5630', isFixed: false },
-    { value: 'orange', label: 'Orange', color: '#FF8B00', isFixed: false },
-    { value: 'yellow', label: 'Yellow', color: '#FFC400', isFixed: false },
-  ]
+
+  // Function to clear all API errors
+  const clearAllApiErrors = () => {
+    setUsernameError('')
+    setFirstNameError('')
+    setLastNameError('')
+    setEmailInputError('')
+    setMobileInputError('')
+    setCompanyInputError('')
+    setDwipInputError('')
+    setPwipInputError('')
+    setSpwipInputError('')
+    setSdwipInputError('')
+    setPasswordError('')
+    setCurrencyError('')
+  }
+
+  // Function to handle API field errors
+  const handleApiFieldErrors = (errorResponse) => {
+    clearAllApiErrors()
+
+    // Check if errorResponse has field-specific errors
+    if (errorResponse && typeof errorResponse === 'object') {
+      // Handle different error response structures
+      const errors = errorResponse.errors || errorResponse.data || errorResponse
+
+      // Map API field names to state setters
+      const fieldErrorMap = {
+        username: setUsernameError,
+        first_name: setFirstNameError,
+        last_name: setLastNameError,
+        email: setEmailInputError,
+        mobile: setMobileInputError,
+        cp: setCompanyInputError,
+        company: setCompanyInputError, // Alternative field name
+        dwip: setDwipInputError,
+        pwip: setPwipInputError,
+        spwip: setSpwipInputError,
+        sdwip: setSdwipInputError,
+        password: setPasswordError,
+        dcrn: setCurrencyError,
+        currency: setCurrencyError, // Alternative field name
+      }
+
+      // Handle different error formats
+      Object.keys(fieldErrorMap).forEach((fieldName) => {
+        const errorSetter = fieldErrorMap[fieldName]
+
+        // Check for different error formats
+        if (errors[fieldName]) {
+          if (Array.isArray(errors[fieldName])) {
+            // If error is array, take first error message
+            errorSetter(errors[fieldName][0])
+          } else if (typeof errors[fieldName] === 'string') {
+            // If error is string
+            errorSetter(errors[fieldName])
+          } else if (errors[fieldName].message) {
+            // If error has message property
+            errorSetter(errors[fieldName].message)
+          }
+        }
+      })
+
+      // Check if no specific field errors were found, show general error
+      const hasFieldErrors = Object.keys(fieldErrorMap).some(
+        (field) => errors[field] !== undefined
+      )
+
+      if (!hasFieldErrors) {
+        // Show general error message
+        const generalMessage =
+          errors.message ||
+          errors.error ||
+          'An error occurred while processing your request'
+        toast.error(generalMessage)
+      }
+    }
+  }
 
   const onSubmit = async (data) => {
     console.log('Form submitted:', data)
+    setIsSubmitting(true)
+    clearAllApiErrors() // Clear previous errors
+
     try {
       console.log(data.uid)
       data.uid
         ? await useJwt.editStore(data.uid, data)
         : await useJwt.addStores(data)
 
-      toast.success('Store added successfully!')
+      toast.success(
+        data.uid ? 'Store updated successfully!' : 'Store added successfully!'
+      )
+
+      // Optionally reset form after successful submission
+      if (!data.uid) {
+        reset()
+      }
     } catch (error) {
-      console.error('Add Store Failed:', error.response?.data || error.message)
-      toast.error('Failed to add Store.')
+      console.error(
+        'Store Operation Failed:',
+        error.response?.data || error.message
+      )
+
+      // Handle API field errors
+      if (error.response?.data) {
+        handleApiFieldErrors(error.response.data)
+      } else {
+        toast.error('Failed to process request.')
+      }
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -113,23 +219,36 @@ const UserForm = ({ formData }) => {
               <Input
                 {...field}
                 type="text"
-                invalid={!!errors.username}
+                invalid={!!errors.username || !!usernameError}
                 placeholder="Enter username"
                 onKeyPress={(e) => {
-                  // Allow only letters (a-z, A-Z) and underscore
+                  if (usernameError) setUsernameError('')
+
+                  // Allow only letters and underscore
                   if (!/[a-zA-Z_]/.test(e.key)) {
                     e.preventDefault()
+                    setUsernameError('Only letters and underscore are allowed.')
+                    setTimeout(() => setUsernameError(''), 3000)
                   }
                 }}
                 onInput={(e) => {
-                  // Remove anything other than letters and underscore
+                  if (usernameError) setUsernameError('')
+
+                  // Remove all except letters and underscore
                   e.target.value = e.target.value.replace(/[^a-zA-Z_]/g, '')
                   field.onChange(e)
+                }}
+                onFocus={() => {
+                  if (usernameError) setUsernameError('')
                 }}
               />
             )}
           />
-          <FormFeedback>{errors.username?.message}</FormFeedback>
+          {(errors.username || usernameError) && (
+            <FormFeedback style={{ display: 'block' }}>
+              {usernameError || errors.username?.message}
+            </FormFeedback>
+          )}
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
@@ -140,29 +259,48 @@ const UserForm = ({ formData }) => {
             rules={{
               required: 'First name is required',
               pattern: {
-                value: /^[A-Za-z]+$/, // only letters, no spaces, no numbers, no special chars
+                value: /^[A-Za-z]+$/,
                 message: 'First name can only contain letters without spaces',
               },
             }}
             render={({ field }) => (
               <Input
                 {...field}
-                invalid={!!errors.first_name}
+                invalid={!!errors.first_name || !!firstNameError}
                 placeholder="Enter first name"
                 onChange={(e) => {
-                  // Remove anything that is not A-Z or a-z
-                  const onlyLetters = e.target.value.replace(/[^A-Za-z]/g, '')
-                  field.onChange(onlyLetters)
+                  if (firstNameError) setFirstNameError('')
+
+                  const cleanValue = e.target.value.replace(/[^A-Za-z]/g, '')
+                  if (cleanValue !== e.target.value) {
+                    setFirstNameError(
+                      'Only letters are allowed (no spaces, numbers, or special characters).'
+                    )
+                    setTimeout(() => setFirstNameError(''), 3000)
+                  }
+
+                  field.onChange(cleanValue)
                 }}
                 onKeyDown={(e) => {
                   if (e.key === ' ') {
-                    e.preventDefault() // Prevent space key press
+                    e.preventDefault()
+                    setFirstNameError(
+                      'Spaces are not allowed in the first name.'
+                    )
+                    setTimeout(() => setFirstNameError(''), 3000)
                   }
+                }}
+                onFocus={() => {
+                  if (firstNameError) setFirstNameError('')
                 }}
               />
             )}
           />
-          <FormFeedback>{errors.first_name?.message}</FormFeedback>
+          {(errors.first_name || firstNameError) && (
+            <FormFeedback style={{ display: 'block' }}>
+              {firstNameError || errors.first_name?.message}
+            </FormFeedback>
+          )}
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
@@ -173,28 +311,46 @@ const UserForm = ({ formData }) => {
             rules={{
               required: 'Last name is required',
               pattern: {
-                value: /^[A-Za-z]+$/, // Only letters
+                value: /^[A-Za-z]+$/,
                 message: 'Last name can only contain letters without spaces',
               },
             }}
             render={({ field }) => (
               <Input
                 {...field}
-                invalid={!!errors.last_name}
+                invalid={!!errors.last_name || !!lastNameError}
                 placeholder="Enter last name"
                 onChange={(e) => {
-                  const onlyLetters = e.target.value.replace(/[^A-Za-z]/g, '')
-                  field.onChange(onlyLetters)
+                  if (lastNameError) setLastNameError('')
+
+                  const cleanValue = e.target.value.replace(/[^A-Za-z]/g, '')
+                  if (cleanValue !== e.target.value) {
+                    setLastNameError(
+                      'Only letters are allowed (no spaces, numbers, or special characters).'
+                    )
+                    setTimeout(() => setLastNameError(''), 3000)
+                  }
+
+                  field.onChange(cleanValue)
                 }}
                 onKeyDown={(e) => {
                   if (e.key === ' ') {
-                    e.preventDefault() // Block space key
+                    e.preventDefault()
+                    setLastNameError('Spaces are not allowed in the last name.')
+                    setTimeout(() => setLastNameError(''), 3000)
                   }
+                }}
+                onFocus={() => {
+                  if (lastNameError) setLastNameError('')
                 }}
               />
             )}
           />
-          <FormFeedback>{errors.last_name?.message}</FormFeedback>
+          {(errors.last_name || lastNameError) && (
+            <FormFeedback style={{ display: 'block' }}>
+              {lastNameError || errors.last_name?.message}
+            </FormFeedback>
+          )}
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
@@ -206,7 +362,6 @@ const UserForm = ({ formData }) => {
             rules={{
               required: 'Email is required',
               pattern: {
-                // Allows only alphanumeric + @ + . (no spaces, no other special characters)
                 value: /^[a-zA-Z0-9@.]+$/,
                 message:
                   'Only alphanumeric characters, "@" and "." are allowed',
@@ -219,9 +374,11 @@ const UserForm = ({ formData }) => {
               <Input
                 {...field}
                 type="email"
-                invalid={!!errors.email}
+                invalid={!!errors.email || !!emailInputError}
                 placeholder="Enter email"
                 onKeyDown={(e) => {
+                  if (emailInputError) setEmailInputError('')
+
                   const allowedKeys = [
                     ...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@.'.split(
                       ''
@@ -232,20 +389,36 @@ const UserForm = ({ formData }) => {
                     'ArrowRight',
                     'Tab',
                   ]
+
                   if (!allowedKeys.includes(e.key)) {
                     e.preventDefault()
+                    setEmailInputError(
+                      'Only letters, numbers, "@", and "." are allowed.'
+                    )
+                    setTimeout(() => setEmailInputError(''), 3000)
                   }
                 }}
                 onPaste={(e) => {
                   const paste = e.clipboardData.getData('text')
                   if (!/^[a-zA-Z0-9@.]+$/.test(paste)) {
                     e.preventDefault()
+                    setEmailInputError(
+                      'Pasted content contains invalid characters.'
+                    )
+                    setTimeout(() => setEmailInputError(''), 3000)
                   }
+                }}
+                onFocus={() => {
+                  if (emailInputError) setEmailInputError('')
                 }}
               />
             )}
           />
-          {errors.email && <FormFeedback>{errors.email.message}</FormFeedback>}
+          {(errors.email || emailInputError) && (
+            <FormFeedback style={{ display: 'block' }}>
+              {emailInputError || errors.email?.message}
+            </FormFeedback>
+          )}
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
@@ -258,18 +431,50 @@ const UserForm = ({ formData }) => {
               required: 'Mobile is required',
               pattern: {
                 value: /^[0-9]{10,15}$/,
-                message: 'Enter a valid mobile number',
+                message: 'Enter a valid mobile number (10 to 15 digits)',
               },
             }}
             render={({ field }) => (
               <Input
                 {...field}
                 placeholder="Enter mobile number"
-                invalid={!!errors.mobile}
+                invalid={!!errors.mobile || !!mobileInputError}
+                onKeyPress={(e) => {
+                  if (mobileInputError) setMobileInputError('')
+                  if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault()
+                    setMobileInputError('Only digits are allowed')
+                    setTimeout(() => setMobileInputError(''), 3000)
+                  }
+                  // Prevent typing if length is already 10 or more
+                  else if (field.value && field.value.length >= 10) {
+                    e.preventDefault()
+                    setMobileInputError('Maximum 10 digits allowed')
+                    setTimeout(() => setMobileInputError(''), 3000)
+                  }
+                }}
+                onInput={(e) => {
+                  if (mobileInputError) setMobileInputError('')
+                  let digitsOnly = e.target.value.replace(/[^0-9]/g, '')
+                  if (digitsOnly.length > 10) {
+                    digitsOnly = digitsOnly.slice(0, 10)
+                    setMobileInputError('Maximum 10 digits allowed')
+                    setTimeout(() => setMobileInputError(''), 3000)
+                  }
+                  e.target.value = digitsOnly
+                  field.onChange(digitsOnly)
+                }}
+                onFocus={() => {
+                  if (mobileInputError) setMobileInputError('')
+                }}
               />
             )}
           />
-          <FormFeedback>{errors.mobile?.message}</FormFeedback>
+          {(errors.mobile || mobileInputError) && (
+            <FormFeedback style={{ display: 'block' }}>
+              {mobileInputError || errors.mobile?.message}
+            </FormFeedback>
+          )}
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
@@ -289,12 +494,19 @@ const UserForm = ({ formData }) => {
               <Input
                 {...field}
                 type="password"
-                invalid={!!errors.password}
+                invalid={!!errors.password || !!passwordError}
                 placeholder="Enter password"
+                onFocus={() => {
+                  if (passwordError) setPasswordError('')
+                }}
               />
             )}
           />
-          <FormFeedback>{errors.password?.message}</FormFeedback>
+          {(errors.password || passwordError) && (
+            <FormFeedback style={{ display: 'block' }}>
+              {passwordError || errors.password?.message}
+            </FormFeedback>
+          )}
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
@@ -308,22 +520,37 @@ const UserForm = ({ formData }) => {
                 {...field}
                 type="text"
                 placeholder="Enter Company name"
-                invalid={!!errors.cp}
+                invalid={!!errors.cp || !!companyInputError}
                 onKeyPress={(e) => {
-                  // Allow letters, numbers, and spaces only
+                  if (companyInputError) setCompanyInputError('')
                   if (!/[a-zA-Z0-9 ]/.test(e.key)) {
                     e.preventDefault()
+                    setCompanyInputError(
+                      'Only letters, numbers, and spaces are allowed.'
+                    )
+                    setTimeout(() => setCompanyInputError(''), 3000)
                   }
                 }}
                 onInput={(e) => {
-                  // Remove all special characters except letters, numbers, and spaces
-                  e.target.value = e.target.value.replace(/[^a-zA-Z0-9 ]/g, '')
-                  field.onChange(e)
+                  if (companyInputError) setCompanyInputError('')
+                  const filteredValue = e.target.value.replace(
+                    /[^a-zA-Z0-9 ]/g,
+                    ''
+                  )
+                  e.target.value = filteredValue
+                  field.onChange(filteredValue)
+                }}
+                onFocus={() => {
+                  if (companyInputError) setCompanyInputError('')
                 }}
               />
             )}
           />
-          <FormFeedback>{errors.cp?.message}</FormFeedback>
+          {(errors.cp || companyInputError) && (
+            <FormFeedback style={{ display: 'block' }}>
+              {companyInputError || errors.cp?.message}
+            </FormFeedback>
+          )}
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
@@ -345,22 +572,32 @@ const UserForm = ({ formData }) => {
                 {...field}
                 type="text"
                 placeholder="Enter Development Whitelist IP"
-                invalid={!!errors.dwip}
+                invalid={!!errors.dwip || !!dwipInputError}
                 onKeyPress={(e) => {
-                  // Allow only digits and dots
+                  if (dwipInputError) setDwipInputError('')
                   if (!/[0-9.]/.test(e.key)) {
                     e.preventDefault()
+                    setDwipInputError('Only digits and dots are allowed.')
+                    setTimeout(() => setDwipInputError(''), 3000)
                   }
                 }}
                 onInput={(e) => {
-                  // Remove any character other than digits and dots
-                  e.target.value = e.target.value.replace(/[^0-9.]/g, '')
-                  field.onChange(e)
+                  if (dwipInputError) setDwipInputError('')
+                  const filteredValue = e.target.value.replace(/[^0-9.]/g, '')
+                  e.target.value = filteredValue
+                  field.onChange(filteredValue)
+                }}
+                onFocus={() => {
+                  if (dwipInputError) setDwipInputError('')
                 }}
               />
             )}
           />
-          <FormFeedback>{errors.dwip?.message}</FormFeedback>
+          {(errors.dwip || dwipInputError) && (
+            <FormFeedback style={{ display: 'block' }}>
+              {dwipInputError || errors.dwip?.message}
+            </FormFeedback>
+          )}
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
@@ -382,22 +619,32 @@ const UserForm = ({ formData }) => {
                 {...field}
                 type="text"
                 placeholder="Enter Production Whitelist IP"
-                invalid={!!errors.pwip}
+                invalid={!!errors.pwip || !!pwipInputError}
                 onKeyPress={(e) => {
-                  // Allow only digits and dots while typing
+                  if (pwipInputError) setPwipInputError('')
                   if (!/[0-9.]/.test(e.key)) {
                     e.preventDefault()
+                    setPwipInputError('Only digits and dots are allowed.')
+                    setTimeout(() => setPwipInputError(''), 3000)
                   }
                 }}
                 onInput={(e) => {
-                  // Clean input, allow only digits and dots
-                  e.target.value = e.target.value.replace(/[^0-9.]/g, '')
-                  field.onChange(e)
+                  if (pwipInputError) setPwipInputError('')
+                  const filteredValue = e.target.value.replace(/[^0-9.]/g, '')
+                  e.target.value = filteredValue
+                  field.onChange(filteredValue)
+                }}
+                onFocus={() => {
+                  if (pwipInputError) setPwipInputError('')
                 }}
               />
             )}
           />
-          <FormFeedback>{errors.pwip?.message}</FormFeedback>
+          {(errors.pwip || pwipInputError) && (
+            <FormFeedback style={{ display: 'block' }}>
+              {pwipInputError || errors.pwip?.message}
+            </FormFeedback>
+          )}
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
@@ -419,22 +666,32 @@ const UserForm = ({ formData }) => {
                 {...field}
                 type="text"
                 placeholder="Enter Secondary Production Whitelist IP"
-                invalid={!!errors.spwip}
+                invalid={!!errors.spwip || !!spwipInputError}
                 onKeyPress={(e) => {
-                  // Allow only digits and dots
+                  if (spwipInputError) setSpwipInputError('')
                   if (!/[0-9.]/.test(e.key)) {
                     e.preventDefault()
+                    setSpwipInputError('Only digits and dots are allowed.')
+                    setTimeout(() => setSpwipInputError(''), 3000)
                   }
                 }}
                 onInput={(e) => {
-                  // Remove invalid chars, allow only digits and dots
-                  e.target.value = e.target.value.replace(/[^0-9.]/g, '')
-                  field.onChange(e)
+                  if (spwipInputError) setSpwipInputError('')
+                  const filteredValue = e.target.value.replace(/[^0-9.]/g, '')
+                  e.target.value = filteredValue
+                  field.onChange(filteredValue)
+                }}
+                onFocus={() => {
+                  if (spwipInputError) setSpwipInputError('')
                 }}
               />
             )}
           />
-          <FormFeedback>{errors.spwip?.message}</FormFeedback>
+          {(errors.spwip || spwipInputError) && (
+            <FormFeedback style={{ display: 'block' }}>
+              {spwipInputError || errors.spwip?.message}
+            </FormFeedback>
+          )}
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
@@ -456,20 +713,32 @@ const UserForm = ({ formData }) => {
                 {...field}
                 type="text"
                 placeholder="Enter Secondary Development Whitelist IP"
-                invalid={!!errors.sdwip}
+                invalid={!!errors.sdwip || !!sdwipInputError}
                 onKeyPress={(e) => {
+                  if (sdwipInputError) setSdwipInputError('')
                   if (!/[0-9.]/.test(e.key)) {
                     e.preventDefault()
+                    setSdwipInputError('Only digits and dots are allowed.')
+                    setTimeout(() => setSdwipInputError(''), 3000)
                   }
                 }}
                 onInput={(e) => {
-                  e.target.value = e.target.value.replace(/[^0-9.]/g, '')
-                  field.onChange(e)
+                  if (sdwipInputError) setSdwipInputError('')
+                  const filteredValue = e.target.value.replace(/[^0-9.]/g, '')
+                  e.target.value = filteredValue
+                  field.onChange(filteredValue)
+                }}
+                onFocus={() => {
+                  if (sdwipInputError) setSdwipInputError('')
                 }}
               />
             )}
           />
-          <FormFeedback>{errors.sdwip?.message}</FormFeedback>
+          {(errors.sdwip || sdwipInputError) && (
+            <FormFeedback style={{ display: 'block' }}>
+              {sdwipInputError || errors.sdwip?.message}
+            </FormFeedback>
+          )}
         </Col>
 
         <Col className="mb-1" md="6" sm="12">
@@ -501,19 +770,40 @@ const UserForm = ({ formData }) => {
                     : []
                 }
                 onChange={(selectedOptions) => {
+                  if (currencyError) setCurrencyError('')
                   field.onChange(selectedOptions.map((option) => option.value))
+                }}
+                onFocus={() => {
+                  if (currencyError) setCurrencyError('')
                 }}
               />
             )}
           />
-          {errors.dcrn && (
-            <div className="text-danger mt-1">{errors.dcrn.message}</div>
+          {(errors.dcrn || currencyError) && (
+            <div className="text-danger mt-1" style={{ fontSize: '0.875rem' }}>
+              {currencyError || errors.dcrn?.message}
+            </div>
           )}
         </Col>
 
-        <Button type="submit" color="primary">
-          Submit
-        </Button>
+        <Col xs="12" className="mt-3">
+          <Button
+            type="submit"
+            color="primary"
+            disabled={isSubmitting}
+            className="me-2"
+          >
+            {isSubmitting ? 'Submitting...' : 'Submit'}
+          </Button>
+          {isSubmitting && (
+            <div
+              className="spinner-border spinner-border-sm ms-2"
+              role="status"
+            >
+              <span className="visually-hidden">Loading...</span>
+            </div>
+          )}
+        </Col>
       </Row>
     </Form>
   )

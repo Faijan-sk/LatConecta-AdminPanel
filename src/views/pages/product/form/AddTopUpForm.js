@@ -26,7 +26,10 @@ const UserForm = ({ formData, onSuccess }) => {
   console.log('Topup', formData)
   const [currencies, setCurrencies] = useState([])
   const [vendor, setVendor] = useState([])
-
+  const [minRangeInputError, setMinRangeInputError] = useState('')
+  const [maxRangeError, setMaxRangeError] = useState('')
+  const [pdnError, setPdnError] = useState('')
+  const [aliasNameError, setAliasNameError] = useState('')
   // Fetch currencies on load
   console.log(vendor)
 
@@ -212,6 +215,7 @@ const UserForm = ({ formData, onSuccess }) => {
           control={control}
           render={({ field }) => <input type="hidden" {...field} />}
         />
+
         <Col sm="12" md="6" className="mb-2">
           <Label>Min Range</Label>
           <Controller
@@ -222,24 +226,47 @@ const UserForm = ({ formData, onSuccess }) => {
             render={({ field }) => (
               <Input
                 {...field}
-                type="text" // text for better input control
-                invalid={!!errors.min_range}
+                type="text"
+                invalid={!!errors.min_range || !!minRangeInputError}
                 placeholder="Enter min Range"
                 onKeyPress={(e) => {
+                  // Clear previous input error
+                  if (minRangeInputError) setMinRangeInputError('')
+
                   // Allow only digits
                   if (!/[0-9]/.test(e.key)) {
                     e.preventDefault()
+                    setMinRangeInputError(
+                      'Only numbers are allowed. Special characters and letters are not permitted.'
+                    )
+
+                    // Clear error message after 3 seconds
+                    setTimeout(() => {
+                      setMinRangeInputError('')
+                    }, 3000)
                   }
                 }}
                 onInput={(e) => {
+                  // Clear input error when user starts typing valid input
+                  if (minRangeInputError) setMinRangeInputError('')
+
                   // Remove all non-digit characters
                   e.target.value = e.target.value.replace(/[^0-9]/g, '')
                   field.onChange(e)
                 }}
+                onFocus={() => {
+                  // Clear input error when field is focused
+                  if (minRangeInputError) setMinRangeInputError('')
+                }}
               />
             )}
           />
-          <FormFeedback>{errors.min_range?.message}</FormFeedback>
+          {/* Show validation errors or input errors */}
+          {(errors.min_range || minRangeInputError) && (
+            <FormFeedback style={{ display: 'block' }}>
+              {minRangeInputError || errors.min_range?.message}
+            </FormFeedback>
+          )}
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
@@ -252,24 +279,39 @@ const UserForm = ({ formData, onSuccess }) => {
             render={({ field }) => (
               <Input
                 {...field}
-                type="text" // use text for full control
-                invalid={!!errors.max_range}
+                type="text"
+                invalid={!!errors.max_range || !!maxRangeError}
                 placeholder="Enter Max Range"
                 onKeyPress={(e) => {
+                  if (maxRangeError) setMaxRangeError('')
+
                   // Allow only digits 0-9
                   if (!/[0-9]/.test(e.key)) {
                     e.preventDefault()
+                    setMaxRangeError(
+                      'Special characters are not allowed. Only numbers allowed.'
+                    )
+                    setTimeout(() => setMaxRangeError(''), 3000)
                   }
                 }}
                 onInput={(e) => {
+                  if (maxRangeError) setMaxRangeError('')
+
                   // Remove all non-digit characters
                   e.target.value = e.target.value.replace(/[^0-9]/g, '')
                   field.onChange(e)
                 }}
+                onFocus={() => {
+                  if (maxRangeError) setMaxRangeError('')
+                }}
               />
             )}
           />
-          <FormFeedback>{errors.max_range?.message}</FormFeedback>
+          {(errors.max_range || maxRangeError) && (
+            <FormFeedback style={{ display: 'block' }}>
+              {maxRangeError || errors.max_range?.message}
+            </FormFeedback>
+          )}
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
@@ -277,29 +319,44 @@ const UserForm = ({ formData, onSuccess }) => {
           <Controller
             name="pdn"
             control={control}
-            defaultValue={0}
+            defaultValue=""
             rules={{ required: 'Product denomination name is required' }}
             render={({ field }) => (
               <Input
                 {...field}
                 type="text"
-                invalid={!!errors.pdn}
+                invalid={!!errors.pdn || !!pdnError}
                 placeholder="Product Denomination Name"
                 onKeyPress={(e) => {
+                  if (pdnError) setPdnError('')
+
                   // Allow only letters, numbers and underscore
                   if (!/[a-zA-Z0-9_]/.test(e.key)) {
                     e.preventDefault()
+                    setPdnError(
+                      'Only letters, numbers, and underscore are allowed.'
+                    )
+                    setTimeout(() => setPdnError(''), 3000)
                   }
                 }}
                 onInput={(e) => {
+                  if (pdnError) setPdnError('')
+
                   // Remove all except letters, numbers and underscore
                   e.target.value = e.target.value.replace(/[^a-zA-Z0-9_]/g, '')
                   field.onChange(e)
                 }}
+                onFocus={() => {
+                  if (pdnError) setPdnError('')
+                }}
               />
             )}
           />
-          <FormFeedback>{errors.pdn?.message}</FormFeedback>
+          {(errors.pdn || pdnError) && (
+            <FormFeedback style={{ display: 'block' }}>
+              {pdnError || errors.pdn?.message}
+            </FormFeedback>
+          )}
         </Col>
 
         <Col sm="12" md="6" className="mb-2">
@@ -307,29 +364,44 @@ const UserForm = ({ formData, onSuccess }) => {
           <Controller
             name="alias_name"
             control={control}
-            defaultValue={0}
+            defaultValue=""
             rules={{ required: 'Alias name is required' }}
             render={({ field }) => (
               <Input
                 {...field}
                 type="text"
-                invalid={!!errors.alias_name}
+                invalid={!!errors.alias_name || !!aliasNameError}
                 placeholder="Alias Name"
                 onKeyPress={(e) => {
+                  if (aliasNameError) setAliasNameError('')
+
                   // Allow only letters, numbers and underscore
                   if (!/[a-zA-Z0-9_]/.test(e.key)) {
                     e.preventDefault()
+                    setAliasNameError(
+                      'Only letters, numbers, and underscore are allowed.'
+                    )
+                    setTimeout(() => setAliasNameError(''), 3000)
                   }
                 }}
                 onInput={(e) => {
-                  // Remove all except letters, numbers and underscore
+                  if (aliasNameError) setAliasNameError('')
+
+                  // Remove invalid characters
                   e.target.value = e.target.value.replace(/[^a-zA-Z0-9_]/g, '')
                   field.onChange(e)
+                }}
+                onFocus={() => {
+                  if (aliasNameError) setAliasNameError('')
                 }}
               />
             )}
           />
-          <FormFeedback>{errors.alias_name?.message}</FormFeedback>
+          {(errors.alias_name || aliasNameError) && (
+            <FormFeedback style={{ display: 'block' }}>
+              {aliasNameError || errors.alias_name?.message}
+            </FormFeedback>
+          )}
         </Col>
 
         <Button type="submit" color="primary">

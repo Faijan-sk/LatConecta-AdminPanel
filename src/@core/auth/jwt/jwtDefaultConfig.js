@@ -4,6 +4,7 @@ export default {
   vendorEndPoint: '/api/vnr/',
   currencyEndPoint: '/api/cu/',
   altanProductEndPoint: '/api/app/',
+  getaltanProductEndPoint: 'api/ap/',
   productEndPoint: '/api/pp/',
   skuidEndPoint: '/api/mvsku/',
   registerEndpoint: '/jwt/register',
@@ -26,6 +27,7 @@ export default {
   // ? e.g. Authorization: Bearer <token>
   tokenType: 'Bearer',
 
+  
   // ** Value of this property will be used as key to store JWT token in storage
   storageTokenKeyName: 'accessToken',
   storageRefreshTokenKeyName: 'refreshToken',

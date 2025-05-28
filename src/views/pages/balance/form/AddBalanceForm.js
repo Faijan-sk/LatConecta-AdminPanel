@@ -36,7 +36,7 @@ const UserForm = ({ formData }) => {
   const [currencies, setCurrencies] = useState([])
   const [stores, setStores] = useState([])
   const [picker, setPicker] = useState(new Date())
-  const [reasons, setReasons] = useState([]) // ✅ Corrected from '' to []
+  const [reasons, setReasons] = useState([])
 
   // OTP Modal State
   const [otpModalOpen, setOtpModalOpen] = useState(false)
@@ -44,6 +44,9 @@ const UserForm = ({ formData }) => {
   const [savedFormData, setSavedFormData] = useState(null)
   // OTP input state inside modal
   const [otpInput, setOtpInput] = useState('')
+
+  // API validation errors state
+  const [apiErrors, setApiErrors] = useState({})
 
   useEffect(() => {
     const fetchCurrencies = async () => {
@@ -86,6 +89,8 @@ const UserForm = ({ formData }) => {
     control,
     formState: { errors },
     reset,
+    setError,
+    clearErrors,
   } = useForm({
     defaultValues: {
       CN: '',
@@ -98,8 +103,38 @@ const UserForm = ({ formData }) => {
     },
   })
 
+  // Custom validation functions
+  const validateSpecialCharacters = (value, fieldName) => {
+    const specialCharRegex = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~`]/
+    if (specialCharRegex.test(value)) {
+      return `Special characters are not allowed in ${fieldName}`
+    }
+    return true
+  }
+
+  const validateNumericInput = (value) => {
+    const numericRegex = /^[0-9.]+$/
+    if (value && !numericRegex.test(value)) {
+      return 'Only numbers and decimal points are allowed'
+    }
+    return true
+  }
+
+  // Clear API errors when user starts typing
+  const clearApiError = (fieldName) => {
+    if (apiErrors[fieldName]) {
+      setApiErrors((prev) => {
+        const newErrors = { ...prev }
+        delete newErrors[fieldName]
+        return newErrors
+      })
+    }
+  }
+
   // On first submit - save data and open OTP modal instead of API call
   const onFirstSubmit = (data) => {
+    // Clear any previous API errors
+    setApiErrors({})
     setSavedFormData(data) // Save form data
     setOtpModalOpen(true) // Show OTP modal
   }
@@ -125,12 +160,32 @@ const UserForm = ({ formData }) => {
       reset()
       setSavedFormData(null)
       setOtpInput('')
+      setApiErrors({})
     } catch (error) {
       console.error(
         'Add balance Failed:',
         error.response?.data || error.message
       )
-      toast.error('Failed to add balance.')
+
+      // Handle field-specific errors from API
+      if (error.response?.data?.errors) {
+        const apiFieldErrors = error.response.data.errors
+        setApiErrors(apiFieldErrors)
+
+        // Set errors in react-hook-form for individual fields
+        Object.keys(apiFieldErrors).forEach((fieldName) => {
+          setError(fieldName, {
+            type: 'api',
+            message: apiFieldErrors[fieldName],
+          })
+        })
+
+        // Close OTP modal to show field errors
+        setOtpModalOpen(false)
+        toast.error('Please fix the errors and try again')
+      } else {
+        toast.error('Failed to add balance.')
+      }
     }
   }
 
@@ -152,7 +207,16 @@ const UserForm = ({ formData }) => {
               control={control}
               rules={{ required: 'Store is required' }}
               render={({ field }) => (
-                <Input type="select" {...field} invalid={!!errors.name}>
+                <Input
+                  type="select"
+                  {...field}
+                  invalid={!!(errors.name || apiErrors.name)}
+                  onChange={(e) => {
+                    clearApiError('name')
+                    clearErrors('name')
+                    field.onChange(e)
+                  }}
+                >
                   <option value="">Select Store</option>
                   {stores.map((item) => (
                     <option key={item.uid} value={item.uid}>
@@ -162,7 +226,9 @@ const UserForm = ({ formData }) => {
                 </Input>
               )}
             />
-            <FormFeedback>{errors.name?.message}</FormFeedback>
+            <FormFeedback>
+              {errors.name?.message || apiErrors.name}
+            </FormFeedback>
           </Col>
 
           <Col sm="12" md="6" className="mb-2">
@@ -172,7 +238,16 @@ const UserForm = ({ formData }) => {
               control={control}
               rules={{ required: 'Currency is required' }}
               render={({ field }) => (
-                <Input type="select" {...field} invalid={!!errors.CN}>
+                <Input
+                  type="select"
+                  {...field}
+                  invalid={!!(errors.CN || apiErrors.CN)}
+                  onChange={(e) => {
+                    clearApiError('CN')
+                    clearErrors('CN')
+                    field.onChange(e)
+                  }}
+                >
                   <option value="">Select Currency</option>
                   {currencies.map((item) => (
                     <option key={item.uid} value={item.prefix}>
@@ -182,7 +257,7 @@ const UserForm = ({ formData }) => {
                 </Input>
               )}
             />
-            <FormFeedback>{errors.CN?.message}</FormFeedback>
+            <FormFeedback>{errors.CN?.message || apiErrors.CN}</FormFeedback>
           </Col>
 
           <Col sm="12" md="6" className="mb-2">
@@ -190,13 +265,21 @@ const UserForm = ({ formData }) => {
             <Controller
               name="TA"
               control={control}
-              rules={{ required: 'TA is required' }}
+              rules={{
+                required: 'TA is required',
+                validate: validateNumericInput,
+              }}
               render={({ field }) => (
                 <Input
-                  type="number"
+                  type="text"
                   {...field}
                   placeholder="Enter TA"
-                  invalid={!!errors.TA}
+                  invalid={!!(errors.TA || apiErrors.TA)}
+                  onChange={(e) => {
+                    clearApiError('TA')
+                    clearErrors('TA')
+                    field.onChange(e)
+                  }}
                   onKeyPress={(e) => {
                     if (!/[0-9.]/.test(e.key)) {
                       e.preventDefault()
@@ -205,7 +288,7 @@ const UserForm = ({ formData }) => {
                 />
               )}
             />
-            <FormFeedback>{errors.TA?.message}</FormFeedback>
+            <FormFeedback>{errors.TA?.message || apiErrors.TA}</FormFeedback>
           </Col>
 
           <Col sm="12" md="6" className="mb-2">
@@ -215,7 +298,16 @@ const UserForm = ({ formData }) => {
               control={control}
               rules={{ required: 'Reason is required' }}
               render={({ field }) => (
-                <Input type="select" {...field} invalid={!!errors.reason}>
+                <Input
+                  type="select"
+                  {...field}
+                  invalid={!!(errors.reason || apiErrors.reason)}
+                  onChange={(e) => {
+                    clearApiError('reason')
+                    clearErrors('reason')
+                    field.onChange(e)
+                  }}
+                >
                   <option value="">Select Reason</option>
                   {reasons.map((item) => (
                     <option key={item.uid} value={item.reason}>
@@ -225,32 +317,55 @@ const UserForm = ({ formData }) => {
                 </Input>
               )}
             />
-            <FormFeedback>{errors.reason?.message}</FormFeedback>
+            <FormFeedback>
+              {errors.reason?.message || apiErrors.reason}
+            </FormFeedback>
           </Col>
 
           <Col sm="12" className="mb-2">
-            <Label>remarks</Label>
+            <Label>Remarks</Label>
             <Controller
               name="remarks"
               control={control}
-              rules={{ required: 'Remark is required' }}
+              rules={{
+                required: 'Remark is required',
+                validate: (value) =>
+                  validateSpecialCharacters(value, 'remarks'),
+              }}
               render={({ field }) => (
                 <Input
                   type="textarea"
                   {...field}
                   placeholder="Enter Remark"
-                  invalid={!!errors.remarks}
+                  invalid={!!(errors.remarks || apiErrors.remarks)}
+                  onChange={(e) => {
+                    clearApiError('remarks')
+                    clearErrors('remarks')
+                    field.onChange(e)
+                  }}
                   onInput={(e) => {
-                    e.target.value = e.target.value.replace(
+                    // Remove special characters in real-time
+                    const cleanValue = e.target.value.replace(
                       /[^a-zA-Z0-9\s]/g,
                       ''
                     )
-                    field.onChange(e)
+                    if (cleanValue !== e.target.value) {
+                      e.target.value = cleanValue
+                      field.onChange(e)
+                      // Show error if special characters were entered
+                      setError('remarks', {
+                        type: 'manual',
+                        message:
+                          'Special characters are not allowed in remarks',
+                      })
+                    }
                   }}
                 />
               )}
             />
-            <FormFeedback>{errors.remarks?.message}</FormFeedback>
+            <FormFeedback>
+              {errors.remarks?.message || apiErrors.remarks}
+            </FormFeedback>
           </Col>
 
           <Col sm="12" className="mb-2">

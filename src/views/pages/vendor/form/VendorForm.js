@@ -23,8 +23,25 @@ import {
 import { useForm, Controller } from 'react-hook-form'
 
 const UserForm = ({ formData, onSubmitSuccess }) => {
+  // Real-time validation error states
+  const [usernameValidationError, setUsernameValidationError] = useState('')
+  const [firstNameValidationError, setFirstNameValidationError] = useState('')
+  const [lastNameValidationError, setLastNameValidationError] = useState('')
+  const [emailValidationError, setEmailValidationError] = useState('')
+  const [countryCodeValidationError, setCountryCodeValidationError] =
+    useState('')
+  const [mobileValidationError, setMobileValidationError] = useState('')
+
   const [currencies, setCurrencies] = useState([])
   const [isSubmitting, setIsSubmitting] = useState(false) // Loading state
+
+  // Helper function to show validation error temporarily
+  const showValidationError = (setErrorFunction, message) => {
+    setErrorFunction(message)
+    setTimeout(() => {
+      setErrorFunction('')
+    }, 3000)
+  }
 
   //**  Fetch currencies on load
   useEffect(() => {
@@ -56,7 +73,7 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
       last_name: '',
       email: '',
       password: '',
-      country_code: '',
+      country_code: '+',
       mobile: '',
       tca: 14,
       pca: 14,
@@ -197,6 +214,7 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
   return (
     <Form onSubmit={handleSubmit(onSubmit)}>
       <Row>
+        {/* Username Field */}
         <Col sm="12" md="6" className="mb-2">
           <Label>Username</Label>
           <Controller
@@ -208,25 +226,35 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
               <Input
                 {...field}
                 type="text"
-                invalid={!!errors.username}
+                invalid={!!errors.username || !!usernameValidationError}
                 placeholder="Enter username"
                 onKeyPress={(e) => {
                   if (!/[a-zA-Z_]/.test(e.key)) {
                     e.preventDefault()
+                    showValidationError(
+                      setUsernameValidationError,
+                      'Special characters and numbers are not allowed'
+                    )
                   }
                 }}
                 onInput={(e) => {
+                  if (usernameValidationError) {
+                    setUsernameValidationError('')
+                  }
                   e.target.value = e.target.value.replace(/[^a-zA-Z_]/g, '')
                   field.onChange(e)
                 }}
               />
             )}
           />
-          {errors.username && (
-            <FormFeedback>{errors.username.message}</FormFeedback>
+          {(errors.username || usernameValidationError) && (
+            <FormFeedback>
+              {errors.username?.message || usernameValidationError}
+            </FormFeedback>
           )}
         </Col>
 
+        {/* First Name Field */}
         <Col sm="12" md="6" className="mb-2">
           <Label>First Name</Label>
           <Controller
@@ -242,25 +270,35 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
             render={({ field }) => (
               <Input
                 {...field}
-                invalid={!!errors.first_name}
+                invalid={!!errors.first_name || !!firstNameValidationError}
                 placeholder="Enter first name"
-                onChange={(e) => {
-                  const onlyLetters = e.target.value.replace(/[^A-Za-z]/g, '')
-                  field.onChange(onlyLetters)
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === ' ') {
+                onKeyPress={(e) => {
+                  if (!/[A-Za-z]/.test(e.key)) {
                     e.preventDefault()
+                    showValidationError(
+                      setFirstNameValidationError,
+                      'Only letters are allowed, no spaces or special characters'
+                    )
                   }
+                }}
+                onInput={(e) => {
+                  if (firstNameValidationError) {
+                    setFirstNameValidationError('')
+                  }
+                  e.target.value = e.target.value.replace(/[^A-Za-z]/g, '')
+                  field.onChange(e)
                 }}
               />
             )}
           />
-          {errors.first_name && (
-            <FormFeedback>{errors.first_name.message}</FormFeedback>
+          {(errors.first_name || firstNameValidationError) && (
+            <FormFeedback>
+              {errors.first_name?.message || firstNameValidationError}
+            </FormFeedback>
           )}
         </Col>
 
+        {/* Last Name Field */}
         <Col sm="12" md="6" className="mb-2">
           <Label>Last Name</Label>
           <Controller
@@ -276,25 +314,35 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
             render={({ field }) => (
               <Input
                 {...field}
-                invalid={!!errors.last_name}
+                invalid={!!errors.last_name || !!lastNameValidationError}
                 placeholder="Enter last name"
-                onChange={(e) => {
-                  const onlyLetters = e.target.value.replace(/[^A-Za-z]/g, '')
-                  field.onChange(onlyLetters)
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === ' ') {
+                onKeyPress={(e) => {
+                  if (!/[A-Za-z]/.test(e.key)) {
                     e.preventDefault()
+                    showValidationError(
+                      setLastNameValidationError,
+                      'Only letters are allowed, no spaces or special characters'
+                    )
                   }
+                }}
+                onInput={(e) => {
+                  if (lastNameValidationError) {
+                    setLastNameValidationError('')
+                  }
+                  e.target.value = e.target.value.replace(/[^A-Za-z]/g, '')
+                  field.onChange(e)
                 }}
               />
             )}
           />
-          {errors.last_name && (
-            <FormFeedback>{errors.last_name.message}</FormFeedback>
+          {(errors.last_name || lastNameValidationError) && (
+            <FormFeedback>
+              {errors.last_name?.message || lastNameValidationError}
+            </FormFeedback>
           )}
         </Col>
 
+        {/* Email Field */}
         <Col sm="12" md="6" className="mb-2">
           <Label>Email</Label>
           <Controller
@@ -316,35 +364,46 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
               <Input
                 {...field}
                 type="email"
-                invalid={!!errors.email}
+                invalid={!!errors.email || !!emailValidationError}
                 placeholder="Enter email"
-                onKeyDown={(e) => {
-                  const allowedKeys = [
-                    ...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@.'.split(
-                      ''
-                    ),
-                    'Backspace',
-                    'Delete',
-                    'ArrowLeft',
-                    'ArrowRight',
-                    'Tab',
-                  ]
-                  if (!allowedKeys.includes(e.key)) {
+                onKeyPress={(e) => {
+                  const allowedChars = /^[a-zA-Z0-9@.]$/
+                  if (!allowedChars.test(e.key)) {
                     e.preventDefault()
+                    showValidationError(
+                      setEmailValidationError,
+                      'Only letters, numbers, @ and . are allowed'
+                    )
                   }
+                }}
+                onInput={(e) => {
+                  if (emailValidationError) {
+                    setEmailValidationError('')
+                  }
+                  e.target.value = e.target.value.replace(/[^a-zA-Z0-9@.]/g, '')
+                  field.onChange(e)
                 }}
                 onPaste={(e) => {
                   const paste = e.clipboardData.getData('text')
                   if (!/^[a-zA-Z0-9@.]+$/.test(paste)) {
                     e.preventDefault()
+                    showValidationError(
+                      setEmailValidationError,
+                      'Pasted content contains invalid characters'
+                    )
                   }
                 }}
               />
             )}
           />
-          {errors.email && <FormFeedback>{errors.email.message}</FormFeedback>}
+          {(errors.email || emailValidationError) && (
+            <FormFeedback>
+              {errors.email?.message || emailValidationError}
+            </FormFeedback>
+          )}
         </Col>
 
+        {/* Password Field */}
         <Col sm="12" md="6" className="mb-2">
           <Label>Password</Label>
           <Controller
@@ -372,6 +431,7 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
           )}
         </Col>
 
+        {/* Country Code Field */}
         <Col sm="12" md="6" className="mb-2">
           <Label>Country Code</Label>
           <Controller
@@ -390,35 +450,46 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
               <Input
                 {...field}
                 placeholder="+XX"
-                invalid={!!errors.country_code}
-                onKeyDown={(e) => {
-                  const allowedKeys = [
-                    'Backspace',
-                    'Delete',
-                    'ArrowLeft',
-                    'ArrowRight',
-                    'Tab',
-                  ]
+                invalid={!!errors.country_code || !!countryCodeValidationError}
+                onKeyPress={(e) => {
                   const isNumber = /^[0-9]$/.test(e.key)
                   const isPlus = e.key === '+'
-                  if (!isNumber && !isPlus && !allowedKeys.includes(e.key)) {
+                  if (!isNumber && !isPlus) {
                     e.preventDefault()
+                    showValidationError(
+                      setCountryCodeValidationError,
+                      'Only + and numbers are allowed'
+                    )
                   }
+                }}
+                onInput={(e) => {
+                  if (countryCodeValidationError) {
+                    setCountryCodeValidationError('')
+                  }
+                  e.target.value = e.target.value.replace(/[^+0-9]/g, '')
+                  field.onChange(e)
                 }}
                 onPaste={(e) => {
                   const paste = e.clipboardData.getData('text')
                   if (!/^\+?\d+$/.test(paste)) {
                     e.preventDefault()
+                    showValidationError(
+                      setCountryCodeValidationError,
+                      'Pasted content is not a valid country code'
+                    )
                   }
                 }}
               />
             )}
           />
-          {errors.country_code && (
-            <FormFeedback>{errors.country_code.message}</FormFeedback>
+          {(errors.country_code || countryCodeValidationError) && (
+            <FormFeedback>
+              {errors.country_code?.message || countryCodeValidationError}
+            </FormFeedback>
           )}
         </Col>
 
+        {/* Mobile Field */}
         <Col sm="12" md="6" className="mb-2">
           <Label>Mobile</Label>
           <Controller
@@ -436,14 +507,21 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
               <Input
                 {...field}
                 placeholder="Enter mobile number"
-                invalid={!!errors.mobile}
+                invalid={!!errors.mobile || !!mobileValidationError}
                 maxLength={10}
                 onKeyPress={(e) => {
                   if (!/[0-9]/.test(e.key)) {
                     e.preventDefault()
+                    showValidationError(
+                      setMobileValidationError,
+                      'Only numbers are allowed'
+                    )
                   }
                 }}
                 onInput={(e) => {
+                  if (mobileValidationError) {
+                    setMobileValidationError('')
+                  }
                   let value = e.target.value.replace(/[^0-9]/g, '').slice(0, 10)
                   e.target.value = value
                   field.onChange(e)
@@ -451,11 +529,14 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
               />
             )}
           />
-          {errors.mobile && (
-            <FormFeedback>{errors.mobile.message}</FormFeedback>
+          {(errors.mobile || mobileValidationError) && (
+            <FormFeedback>
+              {errors.mobile?.message || mobileValidationError}
+            </FormFeedback>
           )}
         </Col>
 
+        {/* TCA Field */}
         <Col sm="12" md="6" className="mb-2">
           <Label>TCA</Label>
           <Controller
@@ -475,6 +556,7 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
           {errors.tca && <FormFeedback>{errors.tca.message}</FormFeedback>}
         </Col>
 
+        {/* PCA Field */}
         <Col sm="12" md="6" className="mb-2">
           <Label>PCA</Label>
           <Controller
@@ -494,6 +576,7 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
           {errors.pca && <FormFeedback>{errors.pca.message}</FormFeedback>}
         </Col>
 
+        {/* SOCA Field */}
         <Col sm="12" md="6" className="mb-2">
           <Label>SOCA</Label>
           <Controller
@@ -513,6 +596,7 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
           {errors.soca && <FormFeedback>{errors.soca.message}</FormFeedback>}
         </Col>
 
+        {/* SOCT Field */}
         <Col sm="12" md="6" className="mb-2">
           <Label>SOCT</Label>
           <Controller
@@ -532,6 +616,7 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
           {errors.soct && <FormFeedback>{errors.soct.message}</FormFeedback>}
         </Col>
 
+        {/* Currency Select Field */}
         <Col sm="12" md="6" className="mb-2">
           <Label>Select Currency</Label>
           <Controller

@@ -158,6 +158,9 @@ export default class JwtService {
     return axios.post(this.jwtConfig.altanProductEndPoint, data)
   }
 
+  getAltanProduct() {
+    return axios.post(this.jwtConfig.getaltanProductEndPoint, data)
+  }
   getProduct() {
     return axios.get(this.jwtConfig.productEndPoint)
   }
