@@ -89,16 +89,16 @@ function AccountSecurity(props) {
         // Call API to disable 2FA
         await useJwt.desableAuthentication()
         toast.success('Two-factor authentication disabled successfully.')
-        setLocalF2AStatus(false) // Update local state
-        await checkF2fStatus() // Refresh status from parent
+        setLocalF2AStatus(false) 
+        await checkF2fStatus() 
       } else {
-        // If user tries to enable again, show enable flow
+        
         setLocalF2AStatus(true)
       }
     } catch (err) {
       console.error('Failed to disable 2FA:', err)
       toast.error('Failed to disable two-factor authentication.')
-      // Reset switch to previous state on error
+      
       e.target.checked = true
     }
   }

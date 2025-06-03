@@ -5,6 +5,7 @@ import { Fragment, useState, useEffect, memo } from 'react'
 import ReactPaginate from 'react-paginate'
 import { ChevronDown } from 'react-feather'
 import DataTable from 'react-data-table-component'
+import AltanProductList from './AltanProductList'
 
 // ** Form
 import AltanProductForm from './form/AltanProductForm'
@@ -119,7 +120,8 @@ const VendorTable = () => {
             paginationComponent={CustomPagination}
             data={tableData.results}
           /> */}
-          <p className="text-center">There are no records to display</p>
+          <AltanProductList />
+          
         </div>
       </Card>
 

@@ -1,8 +1,9 @@
 import axios from 'axios'
 import jwtDefaultConfig from './jwtDefaultConfig'
 
-axios.defaults.baseURL = 'https://bumip.mitopup.com/'
-// axios.defaults.baseURL = 'http://192.168.29.200:8001/'
+// axios.defaults.baseURL = 'https://bumip.mitopup.com/'
+
+axios.defaults.baseURL = 'http://192.168.29.200:8001/'
 
 export default class JwtService {
   // ** jwtConfig <= Will be used by this service
@@ -103,7 +104,6 @@ export default class JwtService {
   }
 
   login(...args) {
-    console.log(args)
     return axios.post(this.jwtConfig.loginEndpoint, ...args)
   }
 
@@ -159,7 +159,7 @@ export default class JwtService {
   }
 
   getAltanProduct() {
-    return axios.post(this.jwtConfig.getaltanProductEndPoint, data)
+    return axios.get(this.jwtConfig.getaltanProductEndPoint)
   }
   getProduct() {
     return axios.get(this.jwtConfig.productEndPoint)

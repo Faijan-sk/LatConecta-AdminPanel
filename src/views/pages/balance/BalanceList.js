@@ -16,7 +16,7 @@ const TableBasic = () => {
     const fetchBalance = async () => {
       try {
         const res = await useJwt.getBalance()
-        console.log(res)
+        // console.log(res)
         setBalance(res.data)
       } catch (err) {
         toast.error('Failed to fetch Balance')

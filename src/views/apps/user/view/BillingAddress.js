@@ -216,7 +216,7 @@ const BillingAddress = () => {
                 name='firstName'
                 control={control}
                 render={({ field }) => {
-                  console.log(field)
+                 
                   return <Input placeholder='John' id='firstName' invalid={errors.firstName && true} {...field} />
                 }}
               />

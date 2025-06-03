@@ -30,7 +30,7 @@ const TableBasic = () => {
     fetchBankCommission()
   }, [])
 
-  console.log({ commissionBalance })
+  // console.log({ commissionBalance })
 
   return (
     <Table responsive bordered striped hover>

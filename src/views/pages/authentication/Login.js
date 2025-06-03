@@ -87,7 +87,6 @@ const defaultValues = {
   password: 'admin@123',
   loginEmail: 'admin',
 }
-
 const Login = () => {
   // ** Hooks
   const { skin } = useSkin()

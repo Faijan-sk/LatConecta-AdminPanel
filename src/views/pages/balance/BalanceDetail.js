@@ -12,7 +12,7 @@ const BalanceDetail = () => {
     const fetchBalanceDetail = async () => {
       try {
         const res = await useJwt.getDetailedBalance(uid) // ✅ Pass uid to API call
-        console.log(res)
+        // console.log(res)
         setSingleBalance(res.data) // ✅ Set data for rendering
       } catch (err) {
         toast.error('Failed to fetch Balance')
