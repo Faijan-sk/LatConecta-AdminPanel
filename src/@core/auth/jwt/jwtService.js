@@ -1,20 +1,17 @@
 import axios from 'axios'
 import jwtDefaultConfig from './jwtDefaultConfig'
 
-// axios.defaults.baseURL = 'https://bumip.mitopup.com/'
+axios.defaults.baseURL = 'https://bumip.mitopup.com/'
 
-axios.defaults.baseURL = 'http://192.168.29.200:8001/'
+// axios.defaults.baseURL = 'http://192.168.29.200:8001/'
 
 export default class JwtService {
   // ** jwtConfig <= Will be used by this service
   jwtConfig = { ...jwtDefaultConfig }
-
   // ** For Refreshing Token
   isAlreadyFetchingAccessToken = false
-
   // ** For Refreshing Token
   subscribers = []
-
   constructor(jwtOverrideConfig) {
     this.jwtConfig = { ...this.jwtConfig, ...jwtOverrideConfig }
 
@@ -53,11 +50,9 @@ export default class JwtService {
             this.isAlreadyFetchingAccessToken = true
             this.refreshToken().then((r) => {
               this.isAlreadyFetchingAccessToken = false
-
               // ** Update accessToken in localStorage
               this.setToken(r.data.accessToken)
               this.setRefreshToken(r.data.refreshToken)
-
               this.onAccessTokenFetched(r.data.accessToken)
             })
           }
@@ -197,26 +192,21 @@ export default class JwtService {
   }
 
   //** Balance Detail */
-
   getBalance() {
     return axios.get(this.jwtConfig.balanceEndPoint)
   }
-
   addBalance(...args) {
     return axios.post(this.jwtConfig.addBalanceEndpoint, ...args)
   }
-
   getDetailedBalance(uid) {
     return axios.get(`${this.jwtConfig.detailedBalance}${uid}`)
   }
   getMonthBalance(month) {
     return axios.get(`${this.jwtConfig.balanceEndPoint}?month=${month}`)
   }
-
   getBankCommissions() {
     return axios.get(this.jwtConfig.BankCommissionEndPoint)
   }
-
   //** transaction Report */
   getTransactin(limit = 0, offset = 0) {
     return axios.get(
@@ -226,7 +216,6 @@ export default class JwtService {
   getfilterTransaction(params) {
     return axios.get(`${this.jwtConfig.transactionEndPoint}${params}`)
   }
-
   // get reason for balanve
   getReason() {
     return axios.get(this.jwtConfig.reasonEndPoint)
@@ -242,5 +231,9 @@ export default class JwtService {
   }
   desableAuthentication() {
     return axios.post(this.jwtConfig.desableAuthenticator)
+  }
+  //dashboard
+  getStastics(...args) {
+    return axios.get(this.jwtConfig.dashboardStasticsEndPoint, ...args)
   }
 }

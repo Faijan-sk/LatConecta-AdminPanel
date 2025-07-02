@@ -1,7 +1,7 @@
 // ** Third Party Components
 import classnames from 'classnames'
 import { TrendingUp, User, Box, DollarSign } from 'react-feather'
-
+import useJwt from '@src/auth/jwt/useJwt'
 // ** Custom Components
 import Avatar from '@components/avatar'
 
@@ -15,8 +15,25 @@ import {
   Row,
   Col,
 } from 'reactstrap'
+import { useEffect, useState } from 'react'
 
 const StatsCard = ({ cols }) => {
+  const [statistics, setStatistics] = useState([])
+  useEffect(() => {
+    const fetchStatistics = async () => {
+      try {
+        const res = await useJwt.getStastics('JUNE')
+        setStatistics(res.data)
+        console.table('The Statistics', res.data)
+      } catch (err) {
+        toast.error('Failed to fetch Statistics')
+        console.error(err)
+      }
+    }
+
+    fetchStatistics()
+  }, [])
+
   const data = [
     {
       title: '230k',
@@ -31,14 +48,14 @@ const StatsCard = ({ cols }) => {
       icon: <User size={24} />,
     },
     {
-      title: '1.423k',
-      subtitle: 'Products',
+      title: '1',
+      subtitle: 'Failed',
       color: 'light-danger',
       icon: <Box size={24} />,
     },
     {
       title: '$9745',
-      subtitle: 'Revenue',
+      subtitle: 'Success',
       color: 'light-success',
       icon: <DollarSign size={24} />,
     },

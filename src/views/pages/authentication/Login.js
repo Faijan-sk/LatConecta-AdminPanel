@@ -79,14 +79,17 @@ const ToastContent = ({ t, name, role }) => {
   )
 }
 
-// const defaultValues = {
-//   password: '',
-//   loginEmail: '',
-// }
 const defaultValues = {
-  password: 'admin@123',
-  loginEmail: 'admin',
+  password: 'B!N@ry1024',
+  loginEmail: 'UGA',
 }
+
+// local server
+// const defaultValues = {
+//   password: 'admin@123',
+//   loginEmail: 'admin',
+// }
+
 const Login = () => {
   // ** Hooks
   const { skin } = useSkin()

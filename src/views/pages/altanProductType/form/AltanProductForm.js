@@ -26,6 +26,7 @@ const UserForm = ({ formData }) => {
   const {
     handleSubmit,
     control,
+    register,
     formState: { errors },
     reset,
   } = useForm({
@@ -67,6 +68,7 @@ const UserForm = ({ formData }) => {
               <Input
                 {...field}
                 type="text"
+               
                 invalid={!!errors.name}
                 placeholder="Enter Name of the product"
                 onKeyPress={(e) => {
@@ -97,9 +99,3 @@ const UserForm = ({ formData }) => {
 }
 
 export default UserForm
-// {
-//   "id": 7,
-//   "uid": "bd18bc05-cf24-4626-83e2-35c417b6baa0",
-//   "name": "Indian Rupee",
-//   "prefix": "INR"
-// }

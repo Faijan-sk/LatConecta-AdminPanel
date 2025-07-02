@@ -1,6 +1,5 @@
 // src/components/UserForm.js
 import React, { useEffect, useState } from 'react'
-
 //** import axios  */
 import axios from 'axios'
 
@@ -135,7 +134,14 @@ const UserForm = ({ formData }) => {
   const onFirstSubmit = (data) => {
     // Clear any previous API errors
     setApiErrors({})
-    setSavedFormData(data) // Save form data
+
+    // Include date in form data
+    const formDataWithDate = {
+      ...data,
+      date: picker,
+    }
+
+    setSavedFormData(formDataWithDate) // Save form data with date
     setOtpModalOpen(true) // Show OTP modal
   }
 
@@ -376,11 +382,23 @@ const UserForm = ({ formData }) => {
               value={picker}
               id="hf-picker"
               className="form-control"
-              onChange={(date) => setPicker(date)}
+              onChange={(date) => {
+                // Fix: Use native Date methods instead of moment to avoid timezone issues
+                const selectedDate = date[0]
+                const year = selectedDate.getFullYear()
+                const month = String(selectedDate.getMonth() + 1).padStart(
+                  2,
+                  '0'
+                )
+                const day = String(selectedDate.getDate()).padStart(2, '0')
+                const formattedDate = `${year}-${month}-${day}`
+                setPicker(formattedDate)
+              }}
               options={{
                 altInput: true,
                 altFormat: 'F j, Y',
                 dateFormat: 'Y-m-d',
+                minDate: 'today',
               }}
             />
           </Col>

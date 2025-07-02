@@ -29,7 +29,8 @@ import {
 
 import { columns } from './column'
 
-const VendorTable = () => {
+const AltanTable = () => {
+
   // ** Store Vars
   //   const dispatch = useDispatch()
   //   const store = useSelector((state) => state.dataTables)
@@ -45,7 +46,7 @@ const VendorTable = () => {
     count: 0,
   })
 
-  // ** ToggleModla,
+  // ** ToggleModal,
   const toggle = (action = 'close', edtData = null) => {
     if (action == 'open') {
       setOpenModal(true)
@@ -104,11 +105,13 @@ const VendorTable = () => {
         <CardHeader className="border-bottom">
           <CardTitle tag="h4">Altan Product</CardTitle>
         </CardHeader>
+
         <div className="d-flex justify-content-end p-1">
           <Button color={'primary'} onClick={() => toggle('open')}>
             Add Altan Product
           </Button>
         </div>
+
         <div className="react-dataTable m-2">
           {/* <DataTable
             noHeader
@@ -119,9 +122,8 @@ const VendorTable = () => {
             sortIcon={<ChevronDown size={10} />}
             paginationComponent={CustomPagination}
             data={tableData.results}
-          /> */}
+          /> */} 
           <AltanProductList />
-          
         </div>
       </Card>
 
@@ -141,4 +143,4 @@ const VendorTable = () => {
   )
 }
 
-export default memo(VendorTable)
+export default memo(AltanTable)

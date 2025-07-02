@@ -25,14 +25,12 @@ export const columns = [
     minWidth: '150px',
     selector: (row) => row.start_date,
   },
-
   {
     name: 'Salary',
     sortable: true,
     minWidth: '150px',
     selector: (row) => row.salary,
   },
-
   {
     name: 'Actions',
     allowOverflow: true,
@@ -47,12 +45,6 @@ export const columns = [
 ]
 
 export const transactionsListColumn = [
-  {
-    name: '#',
-    selector: (row, index) => index + 1,
-    sortable: false,
-    width: '60px',
-  },
   {
     name: 'Date',
     selector: (row) => row.DATETIME,

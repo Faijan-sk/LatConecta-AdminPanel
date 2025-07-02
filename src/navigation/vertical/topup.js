@@ -1,7 +1,9 @@
 import {
   DollarSign,
+  User,
   Users,
   Home,
+  Codesandbox,
   Codepen,
   Printer,
   Database,
@@ -20,7 +22,7 @@ export default [
   {
     id: 'vender-management',
     title: 'Vendor',
-    icon: <Users size={12} />,
+    icon: <User size={12} />,
 
     // action: 'read',
     // resource: 'ACL',
@@ -41,7 +43,7 @@ export default [
   {
     id: 'product-Altan',
     title: 'Altan Product Type',
-    icon: <Codepen size={12} />,
+    icon: <Codesandbox size={12} />,
     navLink: 'altanProduct/list',
   },
   {
