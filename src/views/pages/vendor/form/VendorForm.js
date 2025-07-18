@@ -615,7 +615,6 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
           />
           {errors.soct && <FormFeedback>{errors.soct.message}</FormFeedback>}
         </Col>
-
         {/* Currency Select Field */}
         <Col sm="12" md="6" className="mb-2">
           <Label>Select Currency</Label>
@@ -636,7 +635,6 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
           />
           {errors.crn && <FormFeedback>{errors.crn.message}</FormFeedback>}
         </Col>
-
         <Button type="submit" color="primary" disabled={isSubmitting}>
           {isSubmitting ? 'Submitting...' : 'Submit'}
         </Button>
@@ -644,5 +642,5 @@ const UserForm = ({ formData, onSubmitSuccess }) => {
     </Form>
   )
 }
-
+  
 export default UserForm
